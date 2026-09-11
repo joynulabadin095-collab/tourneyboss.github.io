@@ -23,7 +23,7 @@ export default function Navbar() {
           <strong style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem' }}>Tourney Boss</strong>
         </Link>
 
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <nav className="navbar-nav">
           <Link to="/tournaments" style={{ color: 'var(--text-dim)' }}>টুর্নামেন্ট</Link>
           {user ? (
             <>
