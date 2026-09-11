@@ -107,3 +107,20 @@ button, input, select, textarea { font-family: inherit; font-size: 1rem; }
   border-bottom: 1px solid var(--border);
 }
 .table th { color: var(--text-dim); font-weight: 500; }
+.table-wrap { overflow-x: auto; }
+
+.hero-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: center; }
+.details-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 24px; }
+.two-col-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.navbar-inner { flex-wrap: wrap; height: auto; min-height: 64px; padding: 10px 0; }
+.navbar-nav { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; row-gap: 8px; }
+
+@media (max-width: 780px) {
+  .hero-grid, .details-grid, .two-col-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .container { padding: 0 14px; }
+  h1 { font-size: 1.5rem; }
+}
