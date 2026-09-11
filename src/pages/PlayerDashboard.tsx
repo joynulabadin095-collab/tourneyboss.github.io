@@ -36,7 +36,7 @@ export default function PlayerDashboard() {
     <div className="container" style={{ padding: '40px 0' }}>
       <h1>আমার ড্যাশবোর্ড</h1>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 20 }}>
+      <div className="two-col-grid" style={{ marginTop: 20 }}>
         <div className="card">
           <h3>ওয়ালেট ব্যালেন্স</h3>
           <p style={{ fontSize: '2rem', color: 'var(--gold)', margin: 0 }}>💎 {user.walletBalance}</p>
