@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <div>
       <section style={{ padding: '72px 0 56px', borderBottom: '1px solid var(--border)' }}>
-        <div className="container" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 40, alignItems: 'center' }}>
+        <div className="container hero-grid">
           <div>
             <h1 style={{ fontSize: '2.6rem', maxWidth: 480 }}>
               টুর্নামেন্ট হোস্ট করো, খেলো, <span style={{ color: 'var(--gold)' }}>জিতে নাও</span>
