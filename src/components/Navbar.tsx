@@ -17,7 +17,7 @@ export default function Navbar() {
 
   return (
     <header style={{ borderBottom: '1px solid var(--border)' }}>
-      <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
+      <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link to="/" style={{ color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <img src="/trophy.svg" alt="" width={24} height={24} />
           <strong style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem' }}>Tourney Boss</strong>
