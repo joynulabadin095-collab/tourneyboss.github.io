@@ -31,7 +31,7 @@ export default function TournamentDetails() {
   }
 
   return (
-    <div className="container" style={{ padding: '40px 0', display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: 24 }}>
+    <div className="container" style={{ padding: '40px 0' }}>
       <div>
         <h1>{t.title}</h1>
         <p style={{ color: 'var(--text-dim)' }}>{t.game} · হোস্ট: {t.organizerName}</p>
