@@ -1,35 +1,42 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { getEntryPayments, getCashouts, addCashout, newId } from '../data/store'
+import { getMyEntryPayments, getMyCashouts, submitCashout } from '../data/store'
+import type { EntryPayment, CashoutRequest } from '../types'
 
 export default function PlayerDashboard() {
   const { user, refresh } = useAuth()
   const [method, setMethod] = useState<'bKash' | 'Bank'>('bKash')
   const [account, setAccount] = useState('')
   const [amount, setAmount] = useState('')
+  const [myEntries, setMyEntries] = useState<EntryPayment[]>([])
+  const [myCashouts, setMyCashouts] = useState<CashoutRequest[]>([])
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  function loadData() {
+    getMyEntryPayments().then(setMyEntries)
+    getMyCashouts().then(setMyCashouts)
+  }
 
   if (!user) return null
 
-  const myEntries = getEntryPayments().filter(p => p.playerId === user.id)
-  const myCashouts = getCashouts().filter(c => c.playerId === user.id)
-
-  function requestCashout(e: FormEvent) {
+  async function requestCashout(e: FormEvent) {
     e.preventDefault()
+    setError('')
     const amt = Number(amount)
     if (!user || !amt || amt > user.walletBalance) return
-    addCashout({
-      id: newId('cashout'),
-      playerId: user.id,
-      playerName: user.name,
-      amount: amt,
-      method,
-      accountNumber: account,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-    })
-    setAmount('')
-    setAccount('')
-    refresh()
+    try {
+      await submitCashout({ amount: amt, method, accountNumber: account })
+      setAmount('')
+      setAccount('')
+      loadData()
+      refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'রিকোয়েস্ট করা যায়নি')
+    }
   }
 
   return (
@@ -58,6 +65,7 @@ export default function PlayerDashboard() {
               <label>অ্যাকাউন্ট / নম্বর</label>
               <input value={account} onChange={e => setAccount(e.target.value)} required />
             </div>
+            {error && <p style={{ color: 'var(--danger)' }}>{error}</p>}
             <button className="btn btn-primary" type="submit">Cash-out রিকোয়েস্ট করো</button>
           </form>
         </div>
