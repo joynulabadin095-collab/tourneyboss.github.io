@@ -1,9 +1,18 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getTournaments } from '../data/store'
 import TournamentCard from '../components/TournamentCard'
+import type { Tournament } from '../types'
 
 export default function Home() {
-  const openTournaments = getTournaments().filter(t => t.status === 'open').slice(0, 3)
+  const [openTournaments, setOpenTournaments] = useState<Tournament[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    getTournaments()
+      .then(list => setOpenTournaments(list.filter(t => t.status === 'open').slice(0, 3)))
+      .finally(() => setLoading(false))
+  }, [])
 
   return (
     <div>
@@ -19,7 +28,7 @@ export default function Home() {
             </p>
             <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
               <Link to="/tournaments" className="btn btn-primary">টুর্নামেন্ট দেখো</Link>
-              <Link to="/register" className="btn btn-outline">হোস্ট হও</Link>
+              <Link to="/login" className="btn btn-outline">হোস্ট হও</Link>
             </div>
           </div>
           <div className="card">
@@ -40,7 +49,8 @@ export default function Home() {
           <Link to="/tournaments">সব দেখো →</Link>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
-          {openTournaments.length === 0 && (
+          {loading && <p style={{ color: 'var(--text-dim)' }}>লোড হচ্ছে...</p>}
+          {!loading && openTournaments.length === 0 && (
             <p style={{ color: 'var(--text-dim)' }}>এখনো কোনো টুর্নামেন্ট খোলা নেই।</p>
           )}
           {openTournaments.map(t => <TournamentCard key={t.id} t={t} />)}
@@ -48,4 +58,4 @@ export default function Home() {
       </section>
     </div>
   )
-}
+    }
