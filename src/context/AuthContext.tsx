@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth'
+import { onAuthStateChanged, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth'
 import { auth, googleProvider } from '../firebase'
 import type { Role, User } from '../types'
 import * as store from '../data/store'
@@ -25,6 +25,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [needsRoleSelection, setNeedsRoleSelection] = useState(false)
 
   useEffect(() => {
+    // Finishes a signInWithRedirect flow, if we just came back from one.
+    // Errors here are swallowed — onAuthStateChanged below still fires
+    // normally for a plain page load with no pending redirect.
+    getRedirectResult(auth).catch(() => {})
+
     const unsubscribe = onAuthStateChanged(auth, async firebaseUser => {
       if (!firebaseUser) {
         setUser(null)
@@ -48,8 +53,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   async function continueWithGoogle() {
-    await signInWithPopup(auth, googleProvider)
-    // onAuthStateChanged above will pick this up and resolve fetchMe/needsRoleSelection.
+    // Redirect (not popup) — mobile browsers block/mishandle popups, so the
+    // whole page navigates to Google and back instead. Resolution happens
+    // via getRedirectResult + onAuthStateChanged above after the redirect back.
+    await signInWithRedirect(auth, googleProvider)
   }
 
   async function completeSignup(role: Role): Promise<boolean> {
