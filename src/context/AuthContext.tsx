@@ -1,8 +1,23 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { onAuthStateChanged, signInWithRedirect, getRedirectResult, signOut } from 'firebase/auth'
+import {
+  onAuthStateChanged,
+  signInWithPopup,
+  signOut,
+  type FirebaseError,
+} from 'firebase/auth'
 import { auth, googleProvider } from '../firebase'
 import type { Role, User } from '../types'
 import * as store from '../data/store'
+
+// Shape we expose to the UI for any auth error so the page can show the
+// *exact* reason (Firebase code, human message, root cause when available).
+export interface AuthErrorDetail {
+  code: string           // Firebase code, e.g. 'auth/popup-closed-by-user'
+  message: string        // raw error.message from Firebase
+  cause?: string         // underlying cause.message if Firebase wrapped one
+  stack?: string         // dev-only stack
+  at: string             // step where it happened ('googlePopup' | 'fetchMe' | 'completeSignup' | 'logout' | 'refresh')
+}
 
 interface AuthContextValue {
   user: User | null
@@ -15,21 +30,43 @@ interface AuthContextValue {
   completeSignup: (role: Role) => Promise<boolean>
   logout: () => Promise<void>
   refresh: () => Promise<void>
+  updateProfile: (data: { name: string; phone: string }) => Promise<void>
+  // Last error from any of the auth flows (or null). The Login page reads this
+  // and renders a readable cause. Cleared on next successful action.
+  lastError: AuthErrorDetail | null
+  clearError: () => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
+
+function toAuthError(err: unknown, at: AuthErrorDetail['at']): AuthErrorDetail {
+  if (err instanceof Error) {
+    const firebaseErr = err as FirebaseError
+    // FirebaseError extends Error with a `code` (e.g. 'auth/popup-closed-by-user')
+    // and sometimes a `cause` (the underlying network/HTTP error).
+    const cause = (err as { cause?: unknown }).cause
+    return {
+      code: firebaseErr.code || 'unknown',
+      message: err.message || 'Unknown error',
+      cause: cause instanceof Error ? cause.message : undefined,
+      stack: err.stack,
+      at,
+    }
+  }
+  return {
+    code: 'unknown',
+    message: typeof err === 'string' ? err : 'Unknown error',
+    at,
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [needsRoleSelection, setNeedsRoleSelection] = useState(false)
+  const [lastError, setLastError] = useState<AuthErrorDetail | null>(null)
 
   useEffect(() => {
-    // Finishes a signInWithRedirect flow, if we just came back from one.
-    // Errors here are swallowed — onAuthStateChanged below still fires
-    // normally for a plain page load with no pending redirect.
-    getRedirectResult(auth).catch(() => {})
-
     const unsubscribe = onAuthStateChanged(auth, async firebaseUser => {
       if (!firebaseUser) {
         setUser(null)
@@ -41,10 +78,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { user } = await store.fetchMe()
         setUser(user)
         setNeedsRoleSelection(false)
-      } catch {
+        setLastError(null)
+      } catch (err) {
         // Signed in with Firebase but no users/{uid} doc yet — brand new account.
         setUser(null)
         setNeedsRoleSelection(true)
+        // Don't surface this as an error: it's a normal "first time" flow.
       } finally {
         setLoading(false)
       }
@@ -53,30 +92,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   async function continueWithGoogle() {
-    // Redirect (not popup) — mobile browsers block/mishandle popups, so the
-    // whole page navigates to Google and back instead. Resolution happens
-    // via getRedirectResult + onAuthStateChanged above after the redirect back.
-    await signInWithRedirect(auth, googleProvider)
+    setLastError(null)
+    try {
+      await signInWithPopup(auth, googleProvider)
+      // onAuthStateChanged above will pick this up and resolve fetchMe/needsRoleSelection.
+    } catch (err) {
+      const detail = toAuthError(err, 'googlePopup')
+      setLastError(detail)
+      throw err
+    }
   }
 
   async function completeSignup(role: Role): Promise<boolean> {
     const firebaseUser = auth.currentUser
     if (!firebaseUser) return false
+    setLastError(null)
     try {
       const idToken = await firebaseUser.getIdToken()
       const { user } = await store.googleSignIn(idToken, role)
       setUser(user)
       setNeedsRoleSelection(false)
       return true
-    } catch {
+    } catch (err) {
+      const detail = toAuthError(err, 'completeSignup')
+      setLastError(detail)
       return false
     }
   }
 
   async function logout() {
-    await signOut(auth)
-    setUser(null)
-    setNeedsRoleSelection(false)
+    setLastError(null)
+    try {
+      await signOut(auth)
+      setUser(null)
+      setNeedsRoleSelection(false)
+    } catch (err) {
+      setLastError(toAuthError(err, 'logout'))
+    }
   }
 
   async function refresh() {
@@ -84,13 +136,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { user } = await store.fetchMe()
       setUser(user)
-    } catch {
-      // ignore
+    } catch (err) {
+      setLastError(toAuthError(err, 'refresh'))
     }
   }
 
+  async function updateProfile(data: { name: string; phone: string }) {
+    setLastError(null)
+    try {
+      const updated = await store.updateMyProfile(data)
+      setUser(updated)
+    } catch (err) {
+      const detail = toAuthError(err, 'updateProfile')
+      setLastError(detail)
+      throw err
+    }
+  }
+
+  function clearError() {
+    setLastError(null)
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, needsRoleSelection, continueWithGoogle, completeSignup, logout, refresh }}>
+    <AuthContext.Provider value={{
+      user, loading, needsRoleSelection,
+      continueWithGoogle, completeSignup, logout, refresh,
+      updateProfile, lastError, clearError,
+    }}>
       {children}
     </AuthContext.Provider>
   )
