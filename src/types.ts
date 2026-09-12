@@ -1,14 +1,16 @@
-export type Role = 'player' | 'organizer' | 'admin'
+export type Role = 'member' | 'organizer' | 'admin' | 'sponsor_manager'
 
 export interface User {
-  id: string
+  uid: string
   name: string
   phone: string
   role: Role
+  photoUrl: string | null
   walletBalance: number // Diamonds/Taka credited from prizes
 }
 
 export type PaymentStatus = 'pending' | 'approved' | 'rejected'
+export type PaymentMethod = 'bKash' | 'Bank'
 
 export interface EntryPayment {
   id: string
@@ -16,7 +18,7 @@ export interface EntryPayment {
   playerId: string
   playerName: string
   amount: number
-  method: 'bKash' | 'Bank'
+  method: PaymentMethod
   transactionRef: string
   status: PaymentStatus
   createdAt: string
@@ -26,9 +28,10 @@ export interface HostingRequest {
   id: string
   organizerId: string
   organizerName: string
+  tournamentId: string
   tournamentTitle: string
   hostingFee: number
-  method: 'bKash' | 'Bank'
+  method: PaymentMethod
   transactionRef: string
   status: PaymentStatus
   createdAt: string
@@ -57,7 +60,7 @@ export interface CashoutRequest {
   playerId: string
   playerName: string
   amount: number
-  method: 'bKash' | 'Bank'
+  method: PaymentMethod
   accountNumber: string
   status: PaymentStatus
   createdAt: string
