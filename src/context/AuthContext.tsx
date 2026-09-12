@@ -3,7 +3,6 @@ import {
   onAuthStateChanged,
   signInWithPopup,
   signOut,
-  type FirebaseError,
 } from 'firebase/auth'
 import { auth, googleProvider } from '../firebase'
 import type { Role, User } from '../types'
@@ -39,12 +38,19 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
+// Firebase errors are plain Error instances with a `code` field
+// (e.g. 'auth/popup-closed-by-user') and sometimes a `cause`.
+interface FirebaseLikeError extends Error {
+  code?: string
+  cause?: unknown
+}
+
 function toAuthError(err: unknown, at: AuthErrorDetail['at']): AuthErrorDetail {
   if (err instanceof Error) {
-    const firebaseErr = err as FirebaseError
+    const firebaseErr = err as FirebaseLikeError
     // FirebaseError extends Error with a `code` (e.g. 'auth/popup-closed-by-user')
     // and sometimes a `cause` (the underlying network/HTTP error).
-    const cause = (err as { cause?: unknown }).cause
+    const cause = firebaseErr.cause
     return {
       code: firebaseErr.code || 'unknown',
       message: err.message || 'Unknown error',
