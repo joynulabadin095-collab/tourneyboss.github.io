@@ -1,56 +1,89 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth'
+import { auth, googleProvider } from '../firebase'
 import type { Role, User } from '../types'
 import * as store from '../data/store'
 
 interface AuthContextValue {
   user: User | null
-  login: (phone: string) => boolean
-  register: (name: string, phone: string, role: Role) => void
-  logout: () => void
-  refresh: () => void
+  loading: boolean
+  // true once signed in with Google but the users/{uid} doc doesn't exist yet
+  // (brand-new account) — the UI should ask "Player or Organizer?" and call
+  // completeSignup with the answer.
+  needsRoleSelection: boolean
+  continueWithGoogle: () => Promise<void>
+  completeSignup: (role: Role) => Promise<boolean>
+  logout: () => Promise<void>
+  refresh: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [needsRoleSelection, setNeedsRoleSelection] = useState(false)
 
   useEffect(() => {
-    setUser(store.getSessionUser())
+    const unsubscribe = onAuthStateChanged(auth, async firebaseUser => {
+      if (!firebaseUser) {
+        setUser(null)
+        setNeedsRoleSelection(false)
+        setLoading(false)
+        return
+      }
+      try {
+        const { user } = await store.fetchMe()
+        setUser(user)
+        setNeedsRoleSelection(false)
+      } catch {
+        // Signed in with Firebase but no users/{uid} doc yet — brand new account.
+        setUser(null)
+        setNeedsRoleSelection(true)
+      } finally {
+        setLoading(false)
+      }
+    })
+    return unsubscribe
   }, [])
 
-  function login(phone: string): boolean {
-    const found = store.findUserByPhone(phone)
-    if (!found) return false
-    store.setSessionUser(found.id)
-    setUser(found)
-    return true
+  async function continueWithGoogle() {
+    await signInWithPopup(auth, googleProvider)
+    // onAuthStateChanged above will pick this up and resolve fetchMe/needsRoleSelection.
   }
 
-  function register(name: string, phone: string, role: Role) {
-    const newUser: User = {
-      id: store.newId('user'),
-      name,
-      phone,
-      role,
-      walletBalance: 0,
+  async function completeSignup(role: Role): Promise<boolean> {
+    const firebaseUser = auth.currentUser
+    if (!firebaseUser) return false
+    try {
+      const idToken = await firebaseUser.getIdToken()
+      const { user } = await store.googleSignIn(idToken, role)
+      setUser(user)
+      setNeedsRoleSelection(false)
+      return true
+    } catch {
+      return false
     }
-    store.saveUser(newUser)
-    store.setSessionUser(newUser.id)
-    setUser(newUser)
   }
 
-  function logout() {
-    store.setSessionUser(null)
+  async function logout() {
+    await signOut(auth)
     setUser(null)
+    setNeedsRoleSelection(false)
   }
 
-  function refresh() {
-    setUser(store.getSessionUser())
+  async function refresh() {
+    if (!auth.currentUser) return
+    try {
+      const { user } = await store.fetchMe()
+      setUser(user)
+    } catch {
+      // ignore
+    }
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, refresh }}>
+    <AuthContext.Provider value={{ user, loading, needsRoleSelection, continueWithGoogle, completeSignup, logout, refresh }}>
       {children}
     </AuthContext.Provider>
   )
