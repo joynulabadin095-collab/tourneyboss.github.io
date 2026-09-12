@@ -1,69 +1,57 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
-  getEntryPayments, updateEntryPayment,
-  getHostingRequests, updateHostingRequest,
-  getCashouts, updateCashout,
-  getTournaments, saveTournament,
-  getUsers, saveUser,
+  getPendingEntryPayments, approveEntryPayment, rejectEntryPayment,
+  getPendingHostingRequests, approveHostingRequest, rejectHostingRequest,
+  getPendingCashouts, approveCashout, rejectCashout,
 } from '../data/store'
+import type { EntryPayment, HostingRequest, CashoutRequest } from '../types'
 
 type Tab = 'entries' | 'hosting' | 'cashouts'
 
 export default function AdminPanel() {
   const [tab, setTab] = useState<Tab>('entries')
-  const [, forceRender] = useState(0)
-  const refresh = () => forceRender(n => n + 1)
+  const [entries, setEntries] = useState<EntryPayment[]>([])
+  const [hosting, setHosting] = useState<HostingRequest[]>([])
+  const [cashouts, setCashouts] = useState<CashoutRequest[]>([])
 
-  const entries = getEntryPayments().filter(p => p.status === 'pending')
-  const hosting = getHostingRequests().filter(r => r.status === 'pending')
-  const cashouts = getCashouts().filter(c => c.status === 'pending')
+  useEffect(() => {
+    loadAll()
+  }, [])
 
-  function approveEntry(id: string) {
-    const p = getEntryPayments().find(x => x.id === id)
-    if (!p) return
-    updateEntryPayment({ ...p, status: 'approved' })
-    const t = getTournaments().find(x => x.id === p.tournamentId)
-    if (t) saveTournament({ ...t, filledSlots: t.filledSlots + 1 })
-    refresh()
+  function loadAll() {
+    getPendingEntryPayments().then(setEntries)
+    getPendingHostingRequests().then(setHosting)
+    getPendingCashouts().then(setCashouts)
   }
 
-  function rejectEntry(id: string) {
-    const p = getEntryPayments().find(x => x.id === id)
-    if (!p) return
-    updateEntryPayment({ ...p, status: 'rejected' })
-    refresh()
+  async function approveEntry(id: string) {
+    await approveEntryPayment(id)
+    loadAll()
   }
 
-  function approveHosting(id: string) {
-    const r = getHostingRequests().find(x => x.id === id)
-    if (!r) return
-    updateHostingRequest({ ...r, status: 'approved' })
-    const t = getTournaments().find(x => x.organizerId === r.organizerId && x.title === r.tournamentTitle)
-    if (t) saveTournament({ ...t, status: 'open', hostingApproved: true })
-    refresh()
+  async function rejectEntry(id: string) {
+    await rejectEntryPayment(id)
+    loadAll()
   }
 
-  function rejectHosting(id: string) {
-    const r = getHostingRequests().find(x => x.id === id)
-    if (!r) return
-    updateHostingRequest({ ...r, status: 'rejected' })
-    refresh()
+  async function approveHosting(id: string) {
+    await approveHostingRequest(id)
+    loadAll()
   }
 
-  function approveCashout(id: string) {
-    const c = getCashouts().find(x => x.id === id)
-    if (!c) return
-    updateCashout({ ...c, status: 'approved' })
-    const user = getUsers().find(u => u.id === c.playerId)
-    if (user) saveUser({ ...user, walletBalance: user.walletBalance - c.amount })
-    refresh()
+  async function rejectHosting(id: string) {
+    await rejectHostingRequest(id)
+    loadAll()
   }
 
-  function rejectCashout(id: string) {
-    const c = getCashouts().find(x => x.id === id)
-    if (!c) return
-    updateCashout({ ...c, status: 'rejected' })
-    refresh()
+  async function approveCashoutReq(id: string) {
+    await approveCashout(id)
+    loadAll()
+  }
+
+  async function rejectCashoutReq(id: string) {
+    await rejectCashout(id)
+    loadAll()
   }
 
   return (
@@ -138,8 +126,8 @@ export default function AdminPanel() {
                 <tr key={c.id}>
                   <td>{c.playerName}</td><td>💎{c.amount}</td><td>{c.method}</td><td>{c.accountNumber}</td>
                   <td style={{ display: 'flex', gap: 8 }}>
-                    <button className="btn btn-primary" onClick={() => approveCashout(c.id)}>Approve</button>
-                    <button className="btn btn-danger" onClick={() => rejectCashout(c.id)}>Reject</button>
+                    <button className="btn btn-primary" onClick={() => approveCashoutReq(c.id)}>Approve</button>
+                    <button className="btn btn-danger" onClick={() => rejectCashoutReq(c.id)}>Reject</button>
                   </td>
                 </tr>
               ))}
