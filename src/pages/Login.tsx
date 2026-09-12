@@ -1,36 +1,69 @@
-import { useState, type FormEvent } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import type { Role } from '../types'
 
 export default function Login() {
-  const { login } = useAuth()
+  const { continueWithGoogle, needsRoleSelection, completeSignup } = useAuth()
   const navigate = useNavigate()
-  const [phone, setPhone] = useState('')
+  const [role, setRole] = useState<Role>('member')
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    if (login(phone)) {
-      navigate('/')
+  async function handleGoogleClick() {
+    setError('')
+    setSubmitting(true)
+    try {
+      await continueWithGoogle()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Google দিয়ে সাইন-ইন করা যায়নি')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handleRoleConfirm() {
+    setError('')
+    setSubmitting(true)
+    const ok = await completeSignup(role)
+    setSubmitting(false)
+    if (ok) {
+      navigate(role === 'organizer' ? '/organizer' : '/player')
     } else {
-      setError('এই নম্বরে কোনো অ্যাকাউন্ট পাওয়া যায়নি।')
+      setError('অ্যাকাউন্ট তৈরি করা যায়নি, আবার চেষ্টা করো')
     }
   }
 
   return (
     <div className="container" style={{ maxWidth: 380, padding: '60px 20px' }}>
       <h1>লগইন</h1>
-      <form onSubmit={handleSubmit} className="card">
-        <div className="field">
-          <label>ফোন নম্বর</label>
-          <input value={phone} onChange={e => setPhone(e.target.value)} required placeholder="01XXXXXXXXX" />
-        </div>
-        {error && <p style={{ color: 'var(--danger)' }}>{error}</p>}
-        <button className="btn btn-primary" type="submit" style={{ width: '100%' }}>লগইন করো</button>
-        <p style={{ marginTop: 14, color: 'var(--text-dim)', fontSize: '0.9rem' }}>
-          অ্যাকাউন্ট নেই? <Link to="/register">রেজিস্টার করো</Link>
-        </p>
-      </form>
+      <div className="card">
+        {!needsRoleSelection && (
+          <>
+            <p style={{ color: 'var(--text-dim)' }}>Google অ্যাকাউন্ট দিয়ে সাইন-ইন করো।</p>
+            {error && <p style={{ color: 'var(--danger)' }}>{error}</p>}
+            <button className="btn btn-primary" style={{ width: '100%' }} onClick={handleGoogleClick} disabled={submitting}>
+              {submitting ? 'অপেক্ষা করো...' : 'Continue with Google'}
+            </button>
+          </>
+        )}
+
+        {needsRoleSelection && (
+          <>
+            <p style={{ color: 'var(--text-dim)' }}>তোমার অ্যাকাউন্ট প্রথমবার তৈরি হচ্ছে — তুমি কী হিসেবে যোগ দিতে চাও?</p>
+            <div className="field">
+              <select value={role} onChange={e => setRole(e.target.value as Role)}>
+                <option value="member">Player — টুর্নামেন্টে খেলবো</option>
+                <option value="organizer">Organizer — টুর্নামেন্ট হোস্ট করবো</option>
+              </select>
+            </div>
+            {error && <p style={{ color: 'var(--danger)' }}>{error}</p>}
+            <button className="btn btn-primary" style={{ width: '100%' }} onClick={handleRoleConfirm} disabled={submitting}>
+              {submitting ? 'অপেক্ষা করো...' : 'শুরু করো'}
+            </button>
+          </>
+        )}
+      </div>
     </div>
   )
 }
