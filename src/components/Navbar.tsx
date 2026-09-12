@@ -28,6 +28,7 @@ export default function Navbar() {
           {user ? (
             <>
               <Link to={dashboardPath} style={{ color: 'var(--text-dim)' }}>ড্যাশবোর্ড</Link>
+              <Link to="/profile" style={{ color: 'var(--text-dim)' }}>প্রোফাইল</Link>
               {user.role === 'member' && (
                 <span className="badge badge-approved">💎 {user.walletBalance}</span>
               )}
