@@ -1,10 +1,11 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../context/AuthContext'
 import {
-  getTournaments, saveTournament, getHostingRequests, addHostingRequest, newId,
+  getTournaments, createTournament, getMyHostingRequests, submitHostingRequest,
 } from '../data/store'
+import type { Tournament, HostingRequest } from '../types'
 
-const HOSTING_FEE = 200 // fixed platform hosting fee per tournament
+const HOSTING_FEE = 200 // fixed platform hosting fee per tournament (must match backend HOSTING_FEE env)
 
 export default function OrganizerDashboard() {
   const { user } = useAuth()
@@ -17,51 +18,55 @@ export default function OrganizerDashboard() {
   const [rules, setRules] = useState('')
   const [method, setMethod] = useState<'bKash' | 'Bank'>('bKash')
   const [ref, setRef] = useState('')
-  const [pendingTitle, setPendingTitle] = useState<string | null>(null)
+  const [pendingTournament, setPendingTournament] = useState<Tournament | null>(null)
+  const [myTournaments, setMyTournaments] = useState<Tournament[]>([])
+  const [myHostingRequests, setMyHostingRequests] = useState<HostingRequest[]>([])
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  function loadData() {
+    if (!user) return
+    getTournaments().then(list => setMyTournaments(list.filter(t => t.organizerId === user.uid)))
+    getMyHostingRequests().then(setMyHostingRequests)
+  }
 
   if (!user) return null
 
-  const myTournaments = getTournaments().filter(t => t.organizerId === user.id)
-  const myHostingRequests = getHostingRequests().filter(r => r.organizerId === user.id)
-
-  function createDraft(e: FormEvent) {
+  async function createDraft(e: FormEvent) {
     e.preventDefault()
-    if (!user) return
-    const id = newId('tournament')
-    saveTournament({
-      id,
-      title, game,
-      organizerId: user.id,
-      organizerName: user.name,
-      entryFee: Number(entryFee),
-      prizePool: Number(prizePool),
-      maxSlots: Number(maxSlots),
-      filledSlots: 0,
-      startsAt,
-      status: 'draft',
-      hostingApproved: false,
-      rules,
-    })
-    setPendingTitle(title)
-    setTitle(''); setGame(''); setEntryFee(''); setPrizePool(''); setMaxSlots(''); setStartsAt(''); setRules('')
+    setError('')
+    try {
+      const tournament = await createTournament({
+        title, game,
+        entryFee: Number(entryFee),
+        prizePool: Number(prizePool),
+        maxSlots: Number(maxSlots),
+        startsAt,
+        rules,
+      })
+      setPendingTournament(tournament)
+      setTitle(''); setGame(''); setEntryFee(''); setPrizePool(''); setMaxSlots(''); setStartsAt(''); setRules('')
+      loadData()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'তৈরি করা যায়নি')
+    }
   }
 
-  function submitHostingFee(e: FormEvent) {
+  async function submitHostingFee(e: FormEvent) {
     e.preventDefault()
-    if (!user || !pendingTitle) return
-    addHostingRequest({
-      id: newId('hosting'),
-      organizerId: user.id,
-      organizerName: user.name,
-      tournamentTitle: pendingTitle,
-      hostingFee: HOSTING_FEE,
-      method,
-      transactionRef: ref,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-    })
-    setPendingTitle(null)
-    setRef('')
+    if (!pendingTournament) return
+    setError('')
+    try {
+      await submitHostingRequest({ tournamentId: pendingTournament.id, method, transactionRef: ref })
+      setPendingTournament(null)
+      setRef('')
+      loadData()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'জমা দেয়া যায়নি')
+    }
   }
 
   return (
@@ -89,15 +94,16 @@ export default function OrganizerDashboard() {
               <input type="datetime-local" value={startsAt} onChange={e => setStartsAt(e.target.value)} required /></div>
             <div className="field"><label>নিয়মাবলী</label>
               <textarea rows={3} value={rules} onChange={e => setRules(e.target.value)} required /></div>
+            {error && <p style={{ color: 'var(--danger)' }}>{error}</p>}
             <button className="btn btn-primary" type="submit">Draft তৈরি করো</button>
           </form>
         </div>
 
         <div className="card">
           <h3>Hosting fee জমা দাও</h3>
-          {pendingTitle ? (
+          {pendingTournament ? (
             <form onSubmit={submitHostingFee}>
-              <p style={{ color: 'var(--text-dim)' }}>"{pendingTitle}" এর জন্য ৳{HOSTING_FEE} হোস্টিং ফি</p>
+              <p style={{ color: 'var(--text-dim)' }}>"{pendingTournament.title}" এর জন্য ৳{HOSTING_FEE} হোস্টিং ফি</p>
               <div className="field"><label>মাধ্যম</label>
                 <select value={method} onChange={e => setMethod(e.target.value as 'bKash' | 'Bank')}>
                   <option value="bKash">bKash</option>
