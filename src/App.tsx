@@ -5,7 +5,6 @@ import Home from './pages/Home'
 import TournamentList from './pages/TournamentList'
 import TournamentDetails from './pages/TournamentDetails'
 import Login from './pages/Login'
-import Register from './pages/Register'
 import PlayerDashboard from './pages/PlayerDashboard'
 import OrganizerDashboard from './pages/OrganizerDashboard'
 import AdminPanel from './pages/AdminPanel'
@@ -19,9 +18,8 @@ export default function App() {
         <Route path="/tournaments" element={<TournamentList />} />
         <Route path="/tournaments/:id" element={<TournamentDetails />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
         <Route path="/player" element={
-          <ProtectedRoute role="player"><PlayerDashboard /></ProtectedRoute>
+          <ProtectedRoute role="member"><PlayerDashboard /></ProtectedRoute>
         } />
         <Route path="/organizer" element={
           <ProtectedRoute role="organizer"><OrganizerDashboard /></ProtectedRoute>
