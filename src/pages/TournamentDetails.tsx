@@ -1,33 +1,43 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useParams, Navigate } from 'react-router-dom'
-import { getTournaments, addEntryPayment, newId } from '../data/store'
+import { getTournament, submitEntryPayment } from '../data/store'
 import { useAuth } from '../context/AuthContext'
+import type { Tournament } from '../types'
 
 export default function TournamentDetails() {
   const { id } = useParams()
   const { user } = useAuth()
-  const t = getTournaments().find(x => x.id === id)
+  const [t, setT] = useState<Tournament | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
   const [method, setMethod] = useState<'bKash' | 'Bank'>('bKash')
   const [ref, setRef] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState('')
 
-  if (!t) return <Navigate to="/tournaments" replace />
+  useEffect(() => {
+    if (!id) return
+    getTournament(id)
+      .then(setT)
+      .catch(() => setNotFound(true))
+      .finally(() => setLoading(false))
+  }, [id])
 
-  function submitEntry(e: FormEvent) {
+  if (notFound) return <Navigate to="/tournaments" replace />
+  if (loading || !t) {
+    return <div className="container" style={{ padding: '40px 0' }}><p style={{ color: 'var(--text-dim)' }}>লোড হচ্ছে...</p></div>
+  }
+
+  async function submitEntry(e: FormEvent) {
     e.preventDefault()
-    if (!user) return
-    addEntryPayment({
-      id: newId('entry'),
-      tournamentId: t!.id,
-      playerId: user.id,
-      playerName: user.name,
-      amount: t!.entryFee,
-      method,
-      transactionRef: ref,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-    })
-    setSubmitted(true)
+    if (!user || !t) return
+    setError('')
+    try {
+      await submitEntryPayment({ tournamentId: t.id, method, transactionRef: ref })
+      setSubmitted(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'জমা দেয়া যায়নি')
+    }
   }
 
   return (
@@ -49,7 +59,7 @@ export default function TournamentDetails() {
 
         {!user && <p>জয়েন করতে <a href="/login">লগইন</a> করো।</p>}
 
-        {user?.role === 'player' && !submitted && (
+        {user?.role === 'member' && !submitted && (
           <form onSubmit={submitEntry}>
             <div className="field">
               <label>পেমেন্ট মাধ্যম</label>
@@ -63,6 +73,7 @@ export default function TournamentDetails() {
               <input value={ref} onChange={e => setRef(e.target.value)} required
                 placeholder="যেমন: 8N7X2K1P" />
             </div>
+            {error && <p style={{ color: 'var(--danger)' }}>{error}</p>}
             <button className="btn btn-primary" type="submit">Entry fee জমা দাও</button>
           </form>
         )}
