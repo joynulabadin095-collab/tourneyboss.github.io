@@ -68,6 +68,10 @@ export default function Profile() {
     setError('')
     setSuccess('')
 
+    // Capture the user locally so TypeScript narrows it inside this closure.
+    const currentUser = user
+    if (!currentUser) return
+
     const trimmedName = name.trim()
     const trimmedPhone = phone.trim()
 
@@ -80,7 +84,7 @@ export default function Profile() {
       setError('ফোন নম্বর সঠিক নয় (যেমন: 01712345678)')
       return
     }
-    if (trimmedName === user.name && trimmedPhone === user.phone) {
+    if (trimmedName === currentUser.name && trimmedPhone === currentUser.phone) {
       setError('কিছুই পরিবর্তন হয়নি')
       return
     }
