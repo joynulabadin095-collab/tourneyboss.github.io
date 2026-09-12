@@ -5,15 +5,15 @@ export default function Navbar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
 
-  function handleLogout() {
-    logout()
+  async function handleLogout() {
+    await logout()
     navigate('/')
   }
 
   const dashboardPath =
     user?.role === 'admin' ? '/admin' :
     user?.role === 'organizer' ? '/organizer' :
-    user?.role === 'player' ? '/player' : '/'
+    user?.role === 'member' ? '/player' : '/'
 
   return (
     <header style={{ borderBottom: '1px solid var(--border)' }}>
@@ -28,7 +28,7 @@ export default function Navbar() {
           {user ? (
             <>
               <Link to={dashboardPath} style={{ color: 'var(--text-dim)' }}>ড্যাশবোর্ড</Link>
-              {user.role === 'player' && (
+              {user.role === 'member' && (
                 <span className="badge badge-approved">💎 {user.walletBalance}</span>
               )}
               <button className="btn btn-outline" onClick={handleLogout}>লগআউট</button>
