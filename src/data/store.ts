@@ -20,7 +20,7 @@ export function updateMyProfile(data: { name: string; phone: string }) {
   return patch<{ user: User }>('/auth/me', data).then(r => r.user)
 }
 
-// --- Tournaments ---
+// --- Tournaments (read-only — owned by the Android app) ---
 export function getTournaments() {
   return get<{ tournaments: Tournament[] }>('/tournaments').then(r => r.tournaments)
 }
@@ -29,15 +29,8 @@ export function getTournament(id: string) {
   return get<{ tournament: Tournament }>(`/tournaments/${id}`).then(r => r.tournament)
 }
 
-export function createTournament(data: {
-  title: string; game: string; entryFee: number; prizePool: number
-  maxSlots: number; startsAt: string; rules: string
-}) {
-  return post<{ tournament: Tournament }>('/tournaments', data).then(r => r.tournament)
-}
-
 // --- Entry payments (player -> tournament entry fee) ---
-export function submitEntryPayment(data: { tournamentId: string; method: PaymentMethod; transactionRef: string }) {
+export function submitEntryPayment(data: { tournamentId: string; amount: number; method: PaymentMethod; transactionRef: string }) {
   return post<{ payment: EntryPayment }>('/entry-payments', data).then(r => r.payment)
 }
 
@@ -98,4 +91,5 @@ export function approveCashout(id: string) {
 export function rejectCashout(id: string) {
   return post<{ ok: true }>(`/cashouts/${id}/reject`)
 }
+
 
