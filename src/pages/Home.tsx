@@ -10,7 +10,7 @@ export default function Home() {
 
   useEffect(() => {
     getTournaments()
-      .then(list => setOpenTournaments(list.filter(t => t.status === 'open').slice(0, 3)))
+      .then(list => setOpenTournaments(list.filter(t => t.status === 'registration').slice(0, 3)))
       .finally(() => setLoading(false))
   }, [])
 
@@ -58,4 +58,4 @@ export default function Home() {
       </section>
     </div>
   )
-    }
+}
