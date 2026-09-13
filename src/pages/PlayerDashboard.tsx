@@ -40,15 +40,15 @@ export default function PlayerDashboard() {
   }
 
   return (
-    <div className="container" style={{ padding: '40px 0' }}>
+    <div className="container" style={{ padding: 'var(--space-8) 0' }}>
       <h1>আমার ড্যাশবোর্ড</h1>
 
-      <div className="two-col-grid" style={{ marginTop: 20 }}>
+      <div className="two-col-grid" style={{ marginTop: 'var(--space-6)' }}>
         <div className="card">
           <h3>ওয়ালেট ব্যালেন্স</h3>
-          <p style={{ fontSize: '2rem', color: 'var(--gold)', margin: 0 }}>💎 {user.walletBalance}</p>
+          <p style={{ fontSize: 'var(--text-2xl)', color: 'var(--gold)', margin: 0 }}>💎 {user.walletBalance}</p>
 
-          <form onSubmit={requestCashout} style={{ marginTop: 16 }}>
+          <form onSubmit={requestCashout} style={{ marginTop: 'var(--space-4)' }}>
             <div className="field">
               <label>Cash-out পরিমাণ</label>
               <input type="number" min={1} max={user.walletBalance} value={amount}
@@ -90,11 +90,11 @@ export default function PlayerDashboard() {
         </div>
       </div>
 
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card" style={{ marginTop: 'var(--space-4)' }}>
         <h3>Entry fee history</h3>
         <div className="table-wrap">
         <table className="table">
-          <thead><tr><th>টুর্নামেন্ট</th><th>পরিমাণ</th><th>মাধ্যম</th><th>স্ট্যাটাস</th></tr></thead>
+          <thead><tr><th>টুর্নামেন্ট</th><th>পরিমাণ</th><th>মাধ্যম</th><th>স্ট্যাটাস</th><th>Verification Code</th></tr></thead>
           <tbody>
             {myEntries.map(p => (
               <tr key={p.id}>
@@ -102,9 +102,10 @@ export default function PlayerDashboard() {
                 <td>৳{p.amount}</td>
                 <td>{p.method}</td>
                 <td><span className={`badge badge-${p.status === 'approved' ? 'approved' : p.status === 'rejected' ? 'rejected' : 'pending'}`}>{p.status}</span></td>
+                <td>{p.verificationToken ? <strong style={{ color: 'var(--gold)' }}>{p.verificationToken}</strong> : '—'}</td>
               </tr>
             ))}
-            {myEntries.length === 0 && <tr><td colSpan={4} style={{ color: 'var(--text-dim)' }}>এখনো কোনো টুর্নামেন্টে জয়েন করোনি</td></tr>}
+            {myEntries.length === 0 && <tr><td colSpan={5} style={{ color: 'var(--text-dim)' }}>এখনো কোনো টুর্নামেন্টে জয়েন করোনি</td></tr>}
           </tbody>
         </table>
         </div>
