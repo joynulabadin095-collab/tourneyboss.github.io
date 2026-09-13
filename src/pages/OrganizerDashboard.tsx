@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '../context/AuthContext'
 import {
-  getTournaments, createTournament, getMyHostingRequests, submitHostingRequest,
+  getTournaments, getTournament, getMyHostingRequests, submitHostingRequest,
 } from '../data/store'
 import type { Tournament, HostingRequest } from '../types'
 
@@ -9,19 +9,14 @@ const HOSTING_FEE = 200 // fixed platform hosting fee per tournament (must match
 
 export default function OrganizerDashboard() {
   const { user } = useAuth()
-  const [title, setTitle] = useState('')
-  const [game, setGame] = useState('')
-  const [entryFee, setEntryFee] = useState('')
-  const [prizePool, setPrizePool] = useState('')
-  const [maxSlots, setMaxSlots] = useState('')
-  const [startsAt, setStartsAt] = useState('')
-  const [rules, setRules] = useState('')
+  const [lookupId, setLookupId] = useState('')
+  const [foundTournament, setFoundTournament] = useState<Tournament | null>(null)
   const [method, setMethod] = useState<'bKash' | 'Bank'>('bKash')
   const [ref, setRef] = useState('')
-  const [pendingTournament, setPendingTournament] = useState<Tournament | null>(null)
   const [myTournaments, setMyTournaments] = useState<Tournament[]>([])
   const [myHostingRequests, setMyHostingRequests] = useState<HostingRequest[]>([])
   const [error, setError] = useState('')
+  const [lookupError, setLookupError] = useState('')
 
   useEffect(() => {
     loadData()
@@ -35,33 +30,30 @@ export default function OrganizerDashboard() {
 
   if (!user) return null
 
-  async function createDraft(e: FormEvent) {
+  async function findTournament(e: FormEvent) {
     e.preventDefault()
-    setError('')
+    setLookupError('')
+    setFoundTournament(null)
     try {
-      const tournament = await createTournament({
-        title, game,
-        entryFee: Number(entryFee),
-        prizePool: Number(prizePool),
-        maxSlots: Number(maxSlots),
-        startsAt,
-        rules,
-      })
-      setPendingTournament(tournament)
-      setTitle(''); setGame(''); setEntryFee(''); setPrizePool(''); setMaxSlots(''); setStartsAt(''); setRules('')
-      loadData()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'তৈরি করা যায়নি')
+      const t = await getTournament(lookupId.trim())
+      if (t.organizerId !== user!.uid) {
+        setLookupError('এটা তোমার তৈরি করা টুর্নামেন্ট না')
+        return
+      }
+      setFoundTournament(t)
+    } catch {
+      setLookupError('এই ID-র টুর্নামেন্ট পাওয়া যায়নি')
     }
   }
 
   async function submitHostingFee(e: FormEvent) {
     e.preventDefault()
-    if (!pendingTournament) return
+    if (!foundTournament) return
     setError('')
     try {
-      await submitHostingRequest({ tournamentId: pendingTournament.id, method, transactionRef: ref })
-      setPendingTournament(null)
+      await submitHostingRequest({ tournamentId: foundTournament.id, method, transactionRef: ref })
+      setFoundTournament(null)
+      setLookupId('')
       setRef('')
       loadData()
     } catch (err) {
@@ -70,40 +62,30 @@ export default function OrganizerDashboard() {
   }
 
   return (
-    <div className="container" style={{ padding: '40px 0' }}>
+    <div className="container" style={{ padding: 'var(--space-8) 0' }}>
       <h1>Organizer ড্যাশবোর্ড</h1>
+      <p style={{ color: 'var(--text-dim)', fontSize: 'var(--text-sm)' }}>
+        টুর্নামেন্ট তৈরি/এডিট এখন শুধু Tourney Boss App-এই হয়। এখানে শুধু hosting fee জমা দেয়া যায় — App-এ যে টুর্নামেন্ট বানিয়েছো তার ID বসিয়ে খুঁজে নাও।
+      </p>
 
-      <div className="two-col-grid" style={{ marginTop: 20 }}>
+      <div className="two-col-grid" style={{ marginTop: 'var(--space-6)' }}>
         <div className="card">
-          <h3>নতুন টুর্নামেন্ট তৈরি করো</h3>
-          <p style={{ color: 'var(--text-dim)', fontSize: '0.85rem' }}>
-            Draft হিসেবে সেভ হবে — hosting fee (৳{HOSTING_FEE}) verify হওয়ার পর টুর্নামেন্ট live হবে।
-          </p>
-          <form onSubmit={createDraft}>
-            <div className="field"><label>টুর্নামেন্টের নাম</label>
-              <input value={title} onChange={e => setTitle(e.target.value)} required /></div>
-            <div className="field"><label>গেম</label>
-              <input value={game} onChange={e => setGame(e.target.value)} required /></div>
-            <div className="field"><label>Entry fee (৳)</label>
-              <input type="number" value={entryFee} onChange={e => setEntryFee(e.target.value)} required /></div>
-            <div className="field"><label>প্রাইজ পুল (💎)</label>
-              <input type="number" value={prizePool} onChange={e => setPrizePool(e.target.value)} required /></div>
-            <div className="field"><label>মোট স্লট</label>
-              <input type="number" value={maxSlots} onChange={e => setMaxSlots(e.target.value)} required /></div>
-            <div className="field"><label>শুরুর সময়</label>
-              <input type="datetime-local" value={startsAt} onChange={e => setStartsAt(e.target.value)} required /></div>
-            <div className="field"><label>নিয়মাবলী</label>
-              <textarea rows={3} value={rules} onChange={e => setRules(e.target.value)} required /></div>
-            {error && <p style={{ color: 'var(--danger)' }}>{error}</p>}
-            <button className="btn btn-primary" type="submit">Draft তৈরি করো</button>
+          <h3>টুর্নামেন্ট খুঁজে বের করো</h3>
+          <form onSubmit={findTournament}>
+            <div className="field">
+              <label>Tournament ID (App থেকে কপি করো)</label>
+              <input value={lookupId} onChange={e => setLookupId(e.target.value)} required />
+            </div>
+            {lookupError && <p style={{ color: 'var(--danger)' }}>{lookupError}</p>}
+            <button className="btn btn-outline" type="submit">খুঁজো</button>
           </form>
         </div>
 
         <div className="card">
           <h3>Hosting fee জমা দাও</h3>
-          {pendingTournament ? (
+          {foundTournament ? (
             <form onSubmit={submitHostingFee}>
-              <p style={{ color: 'var(--text-dim)' }}>"{pendingTournament.title}" এর জন্য ৳{HOSTING_FEE} হোস্টিং ফি</p>
+              <p style={{ color: 'var(--text-dim)' }}>"{foundTournament.name}" এর জন্য ৳{HOSTING_FEE} হোস্টিং ফি</p>
               <div className="field"><label>মাধ্যম</label>
                 <select value={method} onChange={e => setMethod(e.target.value as 'bKash' | 'Bank')}>
                   <option value="bKash">bKash</option>
@@ -111,20 +93,21 @@ export default function OrganizerDashboard() {
                 </select></div>
               <div className="field"><label>Transaction ID</label>
                 <input value={ref} onChange={e => setRef(e.target.value)} required /></div>
+              {error && <p style={{ color: 'var(--danger)' }}>{error}</p>}
               <button className="btn btn-primary" type="submit">জমা দাও</button>
             </form>
           ) : (
-            <p style={{ color: 'var(--text-dim)' }}>নতুন টুর্নামেন্ট draft তৈরি করলে এখানে hosting fee জমা দেয়ার ফর্ম আসবে।</p>
+            <p style={{ color: 'var(--text-dim)' }}>বাম পাশে Tournament ID দিয়ে খুঁজে নিলে এখানে hosting fee জমা দেয়ার ফর্ম আসবে।</p>
           )}
 
-          <h4 style={{ marginTop: 20 }}>Hosting রিকোয়েস্ট হিস্টোরি</h4>
+          <h4 style={{ marginTop: 'var(--space-6)' }}>Hosting রিকোয়েস্ট হিস্টোরি</h4>
           <div className="table-wrap">
           <table className="table">
             <thead><tr><th>টুর্নামেন্ট</th><th>ফি</th><th>স্ট্যাটাস</th></tr></thead>
             <tbody>
               {myHostingRequests.map(r => (
                 <tr key={r.id}>
-                  <td>{r.tournamentTitle}</td>
+                  <td>{r.tournamentName}</td>
                   <td>৳{r.hostingFee}</td>
                   <td><span className={`badge badge-${r.status === 'approved' ? 'approved' : r.status === 'rejected' ? 'rejected' : 'pending'}`}>{r.status}</span></td>
                 </tr>
@@ -136,16 +119,16 @@ export default function OrganizerDashboard() {
         </div>
       </div>
 
-      <div className="card" style={{ marginTop: 16 }}>
-        <h3>আমার টুর্নামেন্টগুলো</h3>
+      <div className="card" style={{ marginTop: 'var(--space-4)' }}>
+        <h3>আমার টুর্নামেন্টগুলো (App-এ তৈরি)</h3>
         <div className="table-wrap">
         <table className="table">
-          <thead><tr><th>নাম</th><th>স্লট</th><th>স্ট্যাটাস</th></tr></thead>
+          <thead><tr><th>নাম</th><th>টিম স্লট</th><th>স্ট্যাটাস</th></tr></thead>
           <tbody>
             {myTournaments.map(t => (
               <tr key={t.id}>
-                <td>{t.title}</td>
-                <td>{t.filledSlots}/{t.maxSlots}</td>
+                <td>{t.name}</td>
+                <td>{t.registeredTeams}/{t.teamCount}</td>
                 <td><span className="badge badge-pending">{t.status}</span></td>
               </tr>
             ))}
