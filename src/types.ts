@@ -23,6 +23,7 @@ export interface EntryPayment {
   status: PaymentStatus
   createdAt: string
   verificationToken: string | null
+  used: boolean
 }
 
 export interface HostingRequest {
