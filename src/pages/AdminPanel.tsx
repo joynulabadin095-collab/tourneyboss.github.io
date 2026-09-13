@@ -55,10 +55,10 @@ export default function AdminPanel() {
   }
 
   return (
-    <div className="container" style={{ padding: '40px 0' }}>
+    <div className="container" style={{ padding: 'var(--space-8) 0' }}>
       <h1>Admin প্যানেল</h1>
 
-      <div style={{ display: 'flex', gap: 10, margin: '20px 0', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'var(--space-2)', margin: 'var(--space-6) 0', flexWrap: 'wrap' }}>
         <button className={tab === 'entries' ? 'btn btn-primary' : 'btn btn-outline'} onClick={() => setTab('entries')}>
           Entry Fee ({entries.length})
         </button>
@@ -80,7 +80,7 @@ export default function AdminPanel() {
                 <tr key={p.id}>
                   <td>{p.playerName}</td><td>{p.tournamentId}</td><td>৳{p.amount}</td>
                   <td>{p.method}</td><td>{p.transactionRef}</td>
-                  <td style={{ display: 'flex', gap: 8 }}>
+                  <td style={{ display: 'flex', gap: 'var(--space-2)' }}>
                     <button className="btn btn-primary" onClick={() => approveEntry(p.id)}>Approve</button>
                     <button className="btn btn-danger" onClick={() => rejectEntry(p.id)}>Reject</button>
                   </td>
@@ -101,9 +101,9 @@ export default function AdminPanel() {
             <tbody>
               {hosting.map(r => (
                 <tr key={r.id}>
-                  <td>{r.organizerName}</td><td>{r.tournamentTitle}</td><td>৳{r.hostingFee}</td>
+                  <td>{r.organizerName}</td><td>{r.tournamentName}</td><td>৳{r.hostingFee}</td>
                   <td>{r.method}</td><td>{r.transactionRef}</td>
-                  <td style={{ display: 'flex', gap: 8 }}>
+                  <td style={{ display: 'flex', gap: 'var(--space-2)' }}>
                     <button className="btn btn-primary" onClick={() => approveHosting(r.id)}>Approve</button>
                     <button className="btn btn-danger" onClick={() => rejectHosting(r.id)}>Reject</button>
                   </td>
@@ -125,7 +125,7 @@ export default function AdminPanel() {
               {cashouts.map(c => (
                 <tr key={c.id}>
                   <td>{c.playerName}</td><td>💎{c.amount}</td><td>{c.method}</td><td>{c.accountNumber}</td>
-                  <td style={{ display: 'flex', gap: 8 }}>
+                  <td style={{ display: 'flex', gap: 'var(--space-2)' }}>
                     <button className="btn btn-primary" onClick={() => approveCashoutReq(c.id)}>Approve</button>
                     <button className="btn btn-danger" onClick={() => rejectCashoutReq(c.id)}>Reject</button>
                   </td>
