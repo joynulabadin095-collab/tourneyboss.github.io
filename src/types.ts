@@ -22,6 +22,7 @@ export interface EntryPayment {
   transactionRef: string
   status: PaymentStatus
   createdAt: string
+  verificationToken: string | null
 }
 
 export interface HostingRequest {
@@ -29,7 +30,7 @@ export interface HostingRequest {
   organizerId: string
   organizerName: string
   tournamentId: string
-  tournamentTitle: string
+  tournamentName: string
   hostingFee: number
   method: PaymentMethod
   transactionRef: string
@@ -37,22 +38,26 @@ export interface HostingRequest {
   createdAt: string
 }
 
-export type TournamentStatus = 'draft' | 'open' | 'ongoing' | 'completed'
-
+// Read-only — mirrors the Android app's Tournament doc. The website never
+// creates, edits, or deletes tournaments; it only displays them and
+// collects entry-fee / hosting-fee payments that reference their id.
 export interface Tournament {
   id: string
-  title: string
+  name: string
   game: string
+  gameMode: string
+  teamCount: number
+  registeredTeams: number
+  status: string // 'draft' | 'registration' | 'in_progress' | 'completed' | 'archived'
   organizerId: string
-  organizerName: string
-  entryFee: number
-  prizePool: number
-  maxSlots: number
-  filledSlots: number
-  startsAt: string
-  status: TournamentStatus
-  hostingApproved: boolean
+  organizerDeadline: string
+  description: string
   rules: string
+  prizeDescription: string | null
+  championPrize: string | null
+  runnerUpPrize: string | null
+  bannerImageUrl: string
+  isPublished: boolean
 }
 
 export interface CashoutRequest {
