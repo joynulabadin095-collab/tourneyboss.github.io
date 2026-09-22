@@ -7,6 +7,14 @@ export interface User {
   role: Role
   photoUrl: string | null
   walletBalance: number // Diamonds/Taka credited from prizes
+  // Written by the Android app (Firestore users/{uid} doc has many more fields
+  // than this website reads/writes — these are the ones Profile.tsx displays).
+  // Optional because older accounts or website-only signups may not have them.
+  username?: string
+  whatsapp?: string
+  mlbbUid?: string
+  ffUid?: string
+  pubgUid?: string
 }
 
 export type PaymentStatus = 'pending' | 'approved' | 'rejected'

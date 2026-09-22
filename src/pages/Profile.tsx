@@ -91,7 +91,7 @@ export default function Profile() {
               </span>
             </div>
             <div style={{ color: 'var(--text-dim)', marginTop: 4, fontSize: '0.92rem' }}>
-              UID: <code style={{ color: 'var(--text)' }}>{user.uid}</code>
+              @{user.username || 'user'}
             </div>
             {user.role === 'member' && (
               <div style={{ marginTop: 8, color: 'var(--gold)', fontWeight: 600 }}>
@@ -117,12 +117,28 @@ export default function Profile() {
           marginBottom: 0,
         }}>
           <Field label="নাম" value={user.name || '—'} />
-          <Field label="ফোন নম্বর" value={user.phone || '— (অ্যাপে সেট করো)'} />
+          <Field label="ইউজারনেম" value={user.username ? `@${user.username}` : '— (অ্যাপে সেট করো)'} />
+          <Field label="হোয়াটসঅ্যাপ নম্বর" value={user.whatsapp || user.phone || '— (অ্যাপে সেট করো)'} />
           <Field label="Role" value={ROLE_LABEL[user.role]} />
-          <Field
-            label="Role source"
-            value={user.role === 'member' ? 'App দিয়ে সেট হয়' : 'Backend দিয়ে সেট হয়'}
-          />
+        </dl>
+      </div>
+
+      {/* Game UIDs — written by the Android app, read-only here */}
+      <div className="card" style={{ marginTop: 16 }}>
+        <h3>গেম আইডি</h3>
+        <p style={{ color: 'var(--text-dim)', fontSize: '0.88rem', marginTop: -4 }}>
+          অ্যাপে যেসব গেম আইডি যোগ করেছো, সেগুলো এখানে দেখা যাবে।
+        </p>
+        <dl style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: 14,
+          marginTop: 14,
+          marginBottom: 0,
+        }}>
+          <Field label="MLBB UID" value={user.mlbbUid || 'যোগ করা হয়নি'} />
+          <Field label="Free Fire UID" value={user.ffUid || 'যোগ করা হয়নি'} />
+          <Field label="PUBG Mobile UID" value={user.pubgUid || 'যোগ করা হয়নি'} />
         </dl>
       </div>
 
