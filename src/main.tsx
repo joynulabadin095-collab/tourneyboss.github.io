@@ -7,7 +7,7 @@ import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter basename="/tourneyboss.github.io">
+    <BrowserRouter>
       <AuthProvider>
         <App />
       </AuthProvider>
