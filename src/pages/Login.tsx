@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth, type AuthErrorDetail } from '../context/AuthContext'
 import type { Role } from '../types'
@@ -115,10 +115,17 @@ function ErrorPanel({ err, onClose }: { err: AuthErrorDetail; onClose: () => voi
 }
 
 export default function Login() {
-  const { continueWithGoogle, needsRoleSelection, completeSignup, lastError, clearError } = useAuth()
+  const { user, continueWithGoogle, needsRoleSelection, completeSignup, lastError, clearError } = useAuth()
   const navigate = useNavigate()
   const [role, setRole] = useState<Role>('member')
   const [submitting, setSubmitting] = useState(false)
+
+  // Already signed in (existing account — no role selection needed)?
+  // Send them straight to their profile instead of leaving the login
+  // form/button showing.
+  useEffect(() => {
+    if (user) navigate('/profile', { replace: true })
+  }, [user, navigate])
 
   async function handleGoogleClick() {
     clearError()
@@ -139,7 +146,7 @@ export default function Login() {
     const ok = await completeSignup(role)
     setSubmitting(false)
     if (ok) {
-      navigate(role === 'organizer' ? '/organizer' : '/player')
+      navigate('/profile', { replace: true })
     }
   }
 
