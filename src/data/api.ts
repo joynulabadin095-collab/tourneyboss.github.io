@@ -1,7 +1,7 @@
 import { auth } from '../firebase'
 
 // Talks to the Tourney Boss backend (Node/Express + Firestore) deployed on Render.
-const API_BASE_URL = 'https://tourneyboss-backend.onrender.com'
+export const API_BASE_URL = 'https://tourneyboss-backend.onrender.com'
 
 async function getIdToken(): Promise<string | null> {
   const user = auth.currentUser

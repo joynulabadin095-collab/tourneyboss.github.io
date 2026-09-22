@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import BackendStatus from './BackendStatus'
 
 export default function Navbar() {
   const { user, logout } = useAuth()
@@ -38,6 +39,9 @@ export default function Navbar() {
             <Link to="/login" className="btn btn-primary">লগইন</Link>
           )}
         </nav>
+      </div>
+      <div className="container" style={{ display: 'flex', justifyContent: 'flex-end', padding: '4px 0' }}>
+        <BackendStatus />
       </div>
     </header>
   )
