@@ -14,6 +14,7 @@ const PlayerDashboard = lazy(() => import('./pages/PlayerDashboard'))
 const OrganizerDashboard = lazy(() => import('./pages/OrganizerDashboard'))
 const AdminPanel = lazy(() => import('./pages/AdminPanel'))
 const Profile = lazy(() => import('./pages/Profile'))
+const SponsorDashboard = lazy(() => import('./pages/SponsorDashboard'))
 
 function PageLoading() {
   return (
@@ -42,6 +43,9 @@ export default function App() {
         } />
         <Route path="/admin" element={
           <ProtectedRoute role="admin"><AdminPanel /></ProtectedRoute>
+        } />
+        <Route path="/sponsor" element={
+          <ProtectedRoute role="sponsor_manager"><SponsorDashboard /></ProtectedRoute>
         } />
       </Routes>
       </Suspense>

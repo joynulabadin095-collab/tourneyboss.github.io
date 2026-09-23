@@ -24,7 +24,7 @@ function Reveal({ children, style }: { children: ReactNode; style?: CSSPropertie
 export default function Home() {
   const [openTournaments, setOpenTournaments] = useState<Tournament[]>([])
   const [loading, setLoading] = useState(true)
-  const { continueWithGoogle } = useAuth()
+  const { user, continueWithGoogle } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -296,7 +296,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ============ FINAL CTA ============ */}
+      {/* ============ FINAL CTA — only for logged-out visitors ============ */}
+      {!user && (
       <section className="section">
         <div className="container">
           <Reveal>
@@ -313,6 +314,7 @@ export default function Home() {
           </Reveal>
         </div>
       </section>
+      )}
 
       {/* ============ FOOTER ============ */}
       <footer className="footer">

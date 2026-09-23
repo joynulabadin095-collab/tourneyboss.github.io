@@ -17,11 +17,13 @@ export default function Navbar() {
   const dashboardPath =
     user?.role === 'admin' ? '/admin' :
     user?.role === 'organizer' ? '/organizer' :
-    user?.role === 'member' ? '/player' : '/'
+    user?.role === 'member' ? '/player' :
+    user?.role === 'sponsor_manager' ? '/sponsor' : '/'
 
   const close = () => setDrawerOpen(false)
 
   return (
+    <>
     <header style={{ borderBottom: '1px solid var(--border)' }}>
       <div className="container navbar-inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link to="/" style={{ color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -63,8 +65,13 @@ export default function Navbar() {
       <div className="container" style={{ display: 'flex', justifyContent: 'flex-end', padding: '4px 0' }}>
         <BackendStatus />
       </div>
+    </header>
 
-      {/* Slide-in drawer menu (mobile) */}
+    {/* Slide-in drawer menu (mobile) — rendered outside <header> on purpose:
+        header has backdrop-filter for its glass effect, and backdrop-filter
+        creates a new containing block for position:fixed children, which was
+        trapping this drawer inside the header's own (short) height instead of
+        the full viewport. */}
       <div className={`drawer-overlay${drawerOpen ? ' open' : ''}`} onClick={close} />
       <nav className={`drawer${drawerOpen ? ' open' : ''}`} aria-hidden={!drawerOpen}>
         <div className="drawer-head">
@@ -100,6 +107,6 @@ export default function Navbar() {
           )}
         </div>
       </nav>
-    </header>
+    </>
   )
 }
