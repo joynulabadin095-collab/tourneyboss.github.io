@@ -65,20 +65,8 @@ export default function Home() {
             </h1>
             <p className="hero-sub">
               Entry fee দিয়ে যেকোনো টুর্নামেন্টে জয়েন করো, অথবা নিজের টুর্নামেন্ট হোস্ট করে
-              কমিউনিটি বানাও। জেতা প্রাইজ সরাসরি জমা হবে তোমার{' '}
-              <strong style={{ color: 'var(--text)' }}>Tourney Boss ওয়ালেটে</strong>।
+              কমিউনিটি বানাও।
             </p>
-            <div className="hero-actions">
-              <Link to="/tournaments" className="btn btn-primary">🏆 টুর্নামেন্ট দেখো</Link>
-              <Link to="/login" className="btn btn-outline">⚡ হোস্ট হও</Link>
-            </div>
-            <div className="trust-row">
-              <span>পেমেন্ট মেথড:</span>
-              <span className="methods">
-                <span className="trust-chip">📲 bKash</span>
-                <span className="trust-chip">🏛️ Bank</span>
-              </span>
-            </div>
           </Reveal>
 
           <Reveal>
@@ -118,9 +106,13 @@ export default function Home() {
                     <span className="live-badge" style={{ background: 'var(--surface-2)', color: 'var(--text-dim)' }}>শীঘ্রই</span>
                   </div>
                   <h3 className="live-card-title">এখনো কোনো টুর্নামেন্ট খোলা নেই</h3>
-                  <p className="live-card-meta">নতুন টুর্নামেন্ট খুললেই এখানে দেখা যাবে — বা নিজেই একটা হোস্ট করো।</p>
+                  <p className="live-card-meta">
+                    টুর্নামেন্ট হোস্ট করা যায় শুধু Tourney Boss অ্যাপ থেকে — ওয়েবসাইটে না।
+                  </p>
                   <div className="live-card-cta">
-                    <Link to="/login" className="btn btn-primary">হোস্ট হও</Link>
+                    <a href={PLAY_STORE_URL} target="_blank" rel="noreferrer" className="btn btn-primary">
+                      📱 অ্যাপ ডাউনলোড করে হোস্ট করো
+                    </a>
                   </div>
                 </>
               )}
@@ -346,7 +338,7 @@ export default function Home() {
               <h4>প্ল্যাটফর্ম</h4>
               <ul>
                 <li><Link to="/tournaments">টুর্নামেন্ট</Link></li>
-                <li><Link to="/login">হোস্ট করো</Link></li>
+                <li><a href={PLAY_STORE_URL} target="_blank" rel="noreferrer">হোস্ট করো (App)</a></li>
                 <li><Link to="/profile">ওয়ালেট</Link></li>
               </ul>
             </div>

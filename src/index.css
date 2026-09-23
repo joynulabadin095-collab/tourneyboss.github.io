@@ -362,3 +362,115 @@ header {
 @media (max-width: 560px) {
   .flow, .feature-grid, .footer-grid { grid-template-columns: 1fr; }
 }
+
+/* Google sign-in button (matches the v2 design's intended style) */
+.btn-google { background: #fff; color: #1F1F1F; border-color: transparent; box-shadow: 0 4px 16px rgba(0,0,0,0.18); }
+.btn-google:hover { background: #F1F3F4; filter: none; }
+
+/* Login page — role picker cards */
+.role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: var(--space-5) 0; }
+.role-card {
+  cursor: pointer; text-align: left; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px; transition: border-color .2s ease, background .2s ease;
+}
+.role-card:hover { background: var(--surface-2); }
+.role-card.selected { border-color: var(--gold); background: rgba(245,166,35,0.08); }
+.role-card .ico { font-size: 1.6rem; margin-bottom: 8px; }
+.role-card h4 { margin: 0 0 4px; font-size: .98rem; }
+.role-card p { margin: 0; color: var(--text-dim); font-size: .82rem; }
+@media (max-width: 480px) { .role-grid { grid-template-columns: 1fr; } }
+
+/* ============================================================
+   TOURNAMENT CARDS (v2 design) — used by TournamentCard.tsx
+   ============================================================ */
+:root {
+  --border-strong: rgba(255,255,255,0.18);
+  --shadow-lift: 0 14px 34px rgba(0,0,0,0.35);
+}
+
+.t-card {
+  position: relative;
+  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 22px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+.t-card:hover { transform: translateY(-4px); border-color: var(--border-strong); box-shadow: var(--shadow-lift); }
+.t-card::before {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(120% 60% at 100% 0%, rgba(245,166,35,0.10), transparent 50%);
+  pointer-events: none;
+}
+.t-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+.t-game { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font-size: .74rem; color: var(--text); font-weight: 600; white-space: nowrap; }
+.t-status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+.t-status.live { background: rgba(245,166,35,0.15); color: var(--gold); }
+.t-status.live .pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 8px var(--gold); animation: pulse 1.6s ease-in-out infinite; }
+.t-status.open { background: rgba(61,214,140,0.15); color: var(--success); }
+.t-status.soon { background: rgba(139,124,246,0.15); color: var(--purple); }
+
+.t-title { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; margin-bottom: 6px; }
+.t-meta { display: flex; flex-wrap: wrap; gap: 10px 16px; color: var(--text-dim); font-size: .85rem; margin-bottom: 16px; }
+.t-meta span { display: inline-flex; align-items: center; gap: 5px; }
+
+.t-prize { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-radius: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); margin-bottom: 14px; }
+.t-prize .lbl { font-size: .75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: .06em; }
+.t-prize .amt { font-family: var(--font-display); font-weight: 800; font-size: 1.25rem; color: var(--gold); }
+
+.t-slots { margin-bottom: 14px; }
+.t-slots-row { display: flex; justify-content: space-between; font-size: .82rem; color: var(--text-dim); margin-bottom: 6px; }
+.t-slots-row b { color: var(--text); }
+
+.t-cta { display: flex; gap: 8px; margin-top: auto; }
+.t-cta .btn { flex: 1; }
+
+/* ============================================================
+   NAVBAR — hamburger + slide-in drawer for mobile
+   ============================================================ */
+.hamburger-btn {
+  display: none;
+  width: 40px; height: 40px;
+  align-items: center; justify-content: center;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; cursor: pointer; color: var(--text);
+  flex-shrink: 0;
+}
+.hamburger-btn svg { width: 20px; height: 20px; }
+
+.drawer-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(2px); z-index: 40;
+  opacity: 0; pointer-events: none; transition: opacity .25s ease;
+}
+.drawer-overlay.open { opacity: 1; pointer-events: auto; }
+
+.drawer {
+  position: fixed; top: 0; right: 0; height: 100%; width: min(80vw, 320px);
+  background: #0F0F1F; border-left: 1px solid var(--border);
+  z-index: 50; transform: translateX(100%); transition: transform .3s cubic-bezier(.2,.7,.2,1);
+  display: flex; flex-direction: column;
+  padding-top: env(safe-area-inset-top, 0px);
+  box-shadow: -12px 0 40px rgba(0,0,0,0.4);
+}
+.drawer.open { transform: translateX(0); }
+.drawer-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 18px; border-bottom: 1px solid var(--border); }
+.drawer-close { width: 34px; height: 34px; display: grid; place-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--text-dim); }
+.drawer-nav { display: flex; flex-direction: column; padding: 10px; gap: 2px; overflow-y: auto; }
+.drawer-nav a, .drawer-nav button {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 14px; border-radius: 10px;
+  color: var(--text); font-size: .98rem; text-align: left;
+  background: transparent; border: none; width: 100%; cursor: pointer;
+}
+.drawer-nav a:hover, .drawer-nav button:hover { background: var(--surface); text-decoration: none; }
+.drawer-nav .divider { height: 1px; background: var(--border); margin: 8px 6px; }
+.drawer-foot { margin-top: auto; padding: 16px 18px; border-top: 1px solid var(--border); }
+
+@media (max-width: 760px) {
+  .navbar-nav { display: none; }
+  .hamburger-btn { display: inline-flex; }
+}
