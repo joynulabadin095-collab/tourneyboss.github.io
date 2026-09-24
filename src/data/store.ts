@@ -1,6 +1,6 @@
 import { get, post, patch } from './api'
 import type {
-  User, Tournament, EntryPayment, HostingRequest, CashoutRequest, Role, PaymentMethod,
+  User, Tournament, EntryPayment, HostingRequest, CashoutRequest, Deposit, Role, PaymentMethod,
 } from '../types'
 
 // --- Auth ---
@@ -32,6 +32,12 @@ export function getTournament(id: string) {
 // --- Entry payments (player -> tournament entry fee) ---
 export function submitEntryPayment(data: { tournamentId: string; amount: number; method: PaymentMethod; transactionRef: string }) {
   return post<{ payment: EntryPayment }>('/entry-payments', data).then(r => r.payment)
+}
+
+// Pay a fixed-fee (website-created) tournament's entry fee straight from
+// wallet balance — approved instantly, no bKash reference needed.
+export function payEntryFromWallet(tournamentId: string) {
+  return post<{ payment: EntryPayment }>('/entry-payments/wallet', { tournamentId }).then(r => r.payment)
 }
 
 export function getMyEntryPayments() {
@@ -69,6 +75,27 @@ export function approveHostingRequest(id: string) {
 
 export function rejectHostingRequest(id: string) {
   return post<{ ok: true }>(`/hosting-requests/${id}/reject`)
+}
+
+// --- Deposits (player -> wallet top-up) ---
+export function submitDeposit(data: { amount: number; method: PaymentMethod; transactionRef: string }) {
+  return post<{ deposit: Deposit }>('/deposits', data).then(r => r.deposit)
+}
+
+export function getMyDeposits() {
+  return get<{ deposits: Deposit[] }>('/deposits/mine').then(r => r.deposits)
+}
+
+export function getPendingDeposits() {
+  return get<{ deposits: Deposit[] }>('/deposits?status=pending').then(r => r.deposits)
+}
+
+export function approveDeposit(id: string) {
+  return post<{ ok: true }>(`/deposits/${id}/approve`)
+}
+
+export function rejectDeposit(id: string) {
+  return post<{ ok: true }>(`/deposits/${id}/reject`)
 }
 
 // --- Cashout requests (player wallet -> bKash/Bank) ---

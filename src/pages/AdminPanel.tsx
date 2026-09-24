@@ -3,13 +3,15 @@ import {
   getPendingEntryPayments, approveEntryPayment, rejectEntryPayment,
   getPendingHostingRequests, approveHostingRequest, rejectHostingRequest,
   getPendingCashouts, approveCashout, rejectCashout,
+  getPendingDeposits, approveDeposit, rejectDeposit,
 } from '../data/store'
-import type { EntryPayment, HostingRequest, CashoutRequest } from '../types'
+import type { EntryPayment, HostingRequest, CashoutRequest, Deposit } from '../types'
 
-type Tab = 'entries' | 'hosting' | 'cashouts'
+type Tab = 'deposits' | 'entries' | 'hosting' | 'cashouts'
 
 export default function AdminPanel() {
-  const [tab, setTab] = useState<Tab>('entries')
+  const [tab, setTab] = useState<Tab>('deposits')
+  const [deposits, setDeposits] = useState<Deposit[]>([])
   const [entries, setEntries] = useState<EntryPayment[]>([])
   const [hosting, setHosting] = useState<HostingRequest[]>([])
   const [cashouts, setCashouts] = useState<CashoutRequest[]>([])
@@ -19,9 +21,20 @@ export default function AdminPanel() {
   }, [])
 
   function loadAll() {
+    getPendingDeposits().then(setDeposits)
     getPendingEntryPayments().then(setEntries)
     getPendingHostingRequests().then(setHosting)
     getPendingCashouts().then(setCashouts)
+  }
+
+  async function approveDep(id: string) {
+    await approveDeposit(id)
+    loadAll()
+  }
+
+  async function rejectDep(id: string) {
+    await rejectDeposit(id)
+    loadAll()
   }
 
   async function approveEntry(id: string) {
@@ -59,6 +72,9 @@ export default function AdminPanel() {
       <h1>Admin প্যানেল</h1>
 
       <div style={{ display: 'flex', gap: 'var(--space-2)', margin: 'var(--space-6) 0', flexWrap: 'wrap' }}>
+        <button className={tab === 'deposits' ? 'btn btn-primary' : 'btn btn-outline'} onClick={() => setTab('deposits')}>
+          Deposits ({deposits.length})
+        </button>
         <button className={tab === 'entries' ? 'btn btn-primary' : 'btn btn-outline'} onClick={() => setTab('entries')}>
           Entry Fee ({entries.length})
         </button>
@@ -66,9 +82,32 @@ export default function AdminPanel() {
           Hosting Fee ({hosting.length})
         </button>
         <button className={tab === 'cashouts' ? 'btn btn-primary' : 'btn btn-outline'} onClick={() => setTab('cashouts')}>
-          Cash-out ({cashouts.length})
+          Withdraw ({cashouts.length})
         </button>
       </div>
+
+      {tab === 'deposits' && (
+        <div className="card">
+          <div className="table-wrap">
+          <table className="table">
+            <thead><tr><th>Player</th><th>পরিমাণ</th><th>মাধ্যম</th><th>TrxID</th><th></th></tr></thead>
+            <tbody>
+              {deposits.map(d => (
+                <tr key={d.id}>
+                  <td>{d.playerName}</td><td>৳{d.amount}</td>
+                  <td>{d.method}</td><td>{d.transactionRef}</td>
+                  <td style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                    <button className="btn btn-primary" onClick={() => approveDep(d.id)}>Approve</button>
+                    <button className="btn btn-danger" onClick={() => rejectDep(d.id)}>Reject</button>
+                  </td>
+                </tr>
+              ))}
+              {deposits.length === 0 && <tr><td colSpan={5} style={{ color: 'var(--text-dim)' }}>Pending কিছু নেই</td></tr>}
+            </tbody>
+          </table>
+          </div>
+        </div>
+      )}
 
       {tab === 'entries' && (
         <div className="card">
@@ -120,18 +159,19 @@ export default function AdminPanel() {
         <div className="card">
           <div className="table-wrap">
           <table className="table">
-            <thead><tr><th>Player</th><th>পরিমাণ</th><th>মাধ্যম</th><th>Account</th><th></th></tr></thead>
+            <thead><tr><th>Player</th><th>পরিমাণ</th><th>পাঠাতে হবে</th><th>মাধ্যম</th><th>Account</th><th></th></tr></thead>
             <tbody>
               {cashouts.map(c => (
                 <tr key={c.id}>
-                  <td>{c.playerName}</td><td>💎{c.amount}</td><td>{c.method}</td><td>{c.accountNumber}</td>
+                  <td>{c.playerName}</td><td>৳{c.amount}</td><td><strong>৳{c.receivableAmount}</strong></td>
+                  <td>{c.method}</td><td>{c.accountNumber}</td>
                   <td style={{ display: 'flex', gap: 'var(--space-2)' }}>
                     <button className="btn btn-primary" onClick={() => approveCashoutReq(c.id)}>Approve</button>
                     <button className="btn btn-danger" onClick={() => rejectCashoutReq(c.id)}>Reject</button>
                   </td>
                 </tr>
               ))}
-              {cashouts.length === 0 && <tr><td colSpan={5} style={{ color: 'var(--text-dim)' }}>Pending কিছু নেই</td></tr>}
+              {cashouts.length === 0 && <tr><td colSpan={6} style={{ color: 'var(--text-dim)' }}>Pending কিছু নেই</td></tr>}
             </tbody>
           </table>
           </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { useParams, Navigate } from 'react-router-dom'
-import { getTournament, submitEntryPayment } from '../data/store'
+import { useParams, Navigate, Link } from 'react-router-dom'
+import { getTournament, submitEntryPayment, payEntryFromWallet } from '../data/store'
 import { useAuth } from '../context/AuthContext'
 import type { Tournament } from '../types'
 
@@ -15,6 +15,8 @@ export default function TournamentDetails() {
   const [ref, setRef] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
+  const [walletBusy, setWalletBusy] = useState(false)
+  const [walletError, setWalletError] = useState('')
 
   useEffect(() => {
     if (!id) return
@@ -49,6 +51,20 @@ export default function TournamentDetails() {
     }
   }
 
+  async function handleWalletPay() {
+    if (!user || !t) return
+    setWalletError('')
+    setWalletBusy(true)
+    try {
+      await payEntryFromWallet(t.id)
+      setSubmitted(true)
+    } catch (err) {
+      setWalletError(err instanceof Error ? err.message : 'পেমেন্ট করা যায়নি')
+    } finally {
+      setWalletBusy(false)
+    }
+  }
+
   return (
     <div className="container details-grid" style={{ padding: 'var(--space-8) 0' }}>
       <div>
@@ -72,8 +88,36 @@ export default function TournamentDetails() {
 
         {!user && <p>জয়েন করতে <a href="/login">লগইন</a> করো।</p>}
 
+        {user?.role === 'member' && !submitted && t.isPaid && t.entryFee ? (
+          <div className="card" style={{ marginBottom: 'var(--space-4)', background: 'var(--surface-2)' }}>
+            <p style={{ margin: 0 }}>
+              এই টুর্নামেন্টের entry fee <strong style={{ color: 'var(--gold)' }}>৳{t.entryFee}</strong> —
+              সরাসরি তোমার ওয়ালেট থেকে কেটে নেওয়া যাবে।
+            </p>
+            <p style={{ color: 'var(--text-dim)', fontSize: 'var(--text-sm)' }}>
+              তোমার ওয়ালেট ব্যালেন্স: ৳{user.walletBalance}
+            </p>
+            {user.walletBalance >= t.entryFee ? (
+              <button className="btn btn-primary" style={{ width: '100%' }} onClick={handleWalletPay} disabled={walletBusy}>
+                {walletBusy ? 'পেমেন্ট হচ্ছে...' : `ওয়ালেট থেকে ৳${t.entryFee} দাও`}
+              </button>
+            ) : (
+              <p style={{ color: 'var(--danger)', fontSize: 'var(--text-sm)' }}>
+                ওয়ালেটে যথেষ্ট টাকা নেই — আগে <Link to="/player">Deposit করো</Link>।
+              </p>
+            )}
+            {walletError && <p style={{ color: 'var(--danger)' }}>{walletError}</p>}
+          </div>
+        ) : null}
+
         {user?.role === 'member' && !submitted && (
-          <form onSubmit={submitEntry}>
+          <>
+            {t.isPaid && t.entryFee && (
+              <p style={{ color: 'var(--text-dim)', fontSize: 'var(--text-xs)' }}>
+                অথবা bKash/Bank দিয়ে সরাসরি জমা দাও:
+              </p>
+            )}
+            <form onSubmit={submitEntry}>
             <div className="field">
               <label>যত টাকা পাঠিয়েছো (৳)</label>
               <input type="number" min={1} value={amount} onChange={e => setAmount(e.target.value)} required />
@@ -93,6 +137,7 @@ export default function TournamentDetails() {
             {error && <p style={{ color: 'var(--danger)' }}>{error}</p>}
             <button className="btn btn-primary" type="submit">Entry fee জমা দাও</button>
           </form>
+          </>
         )}
 
         {submitted && (

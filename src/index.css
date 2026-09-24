@@ -476,3 +476,8 @@ header {
   .navbar-nav { display: none; }
   .hamburger-btn { display: inline-flex; }
 }
+
+/* Paid / Free entry badge on tournament cards */
+.t-fee-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: .76rem; font-weight: 600; }
+.t-fee-badge.paid { background: rgba(245,166,35,0.15); color: var(--gold); }
+.t-fee-badge.free { background: rgba(61,214,140,0.15); color: var(--success); }

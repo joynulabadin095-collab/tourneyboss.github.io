@@ -18,7 +18,23 @@ export interface User {
 }
 
 export type PaymentStatus = 'pending' | 'approved' | 'rejected'
-export type PaymentMethod = 'bKash' | 'Bank'
+export type PaymentMethod = 'bKash' | 'Nagad' | 'Rocket' | 'Bank' | 'Wallet'
+
+// Same 2% used by the backend — kept here only for showing a live fee
+// preview in the deposit/withdraw forms before submitting.
+export const PLATFORM_FEE_RATE = 0.02
+
+export interface Deposit {
+  id: string
+  playerId: string
+  playerName: string
+  amount: number
+  method: PaymentMethod
+  transactionRef: string
+  status: PaymentStatus
+  createdAt: string
+  creditedAmount: number | null
+}
 
 export interface EntryPayment {
   id: string
@@ -67,6 +83,11 @@ export interface Tournament {
   runnerUpPrize: string | null
   bannerImageUrl: string
   isPublished: boolean
+  // Paid tournaments are created from the website (fixed entry fee, same for
+  // every entrant, payable straight from wallet balance); free tournaments
+  // are created from the app and have neither field set.
+  isPaid?: boolean
+  entryFee?: number
 }
 
 export interface CashoutRequest {
@@ -74,6 +95,7 @@ export interface CashoutRequest {
   playerId: string
   playerName: string
   amount: number
+  receivableAmount: number
   method: PaymentMethod
   accountNumber: string
   status: PaymentStatus
