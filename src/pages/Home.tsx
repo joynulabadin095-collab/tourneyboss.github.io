@@ -107,12 +107,10 @@ export default function Home() {
                   </div>
                   <h3 className="live-card-title">এখনো কোনো টুর্নামেন্ট খোলা নেই</h3>
                   <p className="live-card-meta">
-                    টুর্নামেন্ট হোস্ট করা যায় শুধু Tourney Boss অ্যাপ থেকে — ওয়েবসাইটে না।
+                    Paid টুর্নামেন্ট এই ওয়েবসাইট থেকেই হোস্ট করা যায়; ফ্রি টুর্নামেন্টের জন্য অ্যাপ লাগবে।
                   </p>
                   <div className="live-card-cta">
-                    <a href={PLAY_STORE_URL} target="_blank" rel="noreferrer" className="btn btn-primary">
-                      📱 অ্যাপ ডাউনলোড করে হোস্ট করো
-                    </a>
+                    <Link to="/host" className="btn btn-primary">💰 Paid টুর্নামেন্ট হোস্ট করো</Link>
                   </div>
                 </>
               )}
@@ -340,7 +338,8 @@ export default function Home() {
               <h4>প্ল্যাটফর্ম</h4>
               <ul>
                 <li><Link to="/tournaments">টুর্নামেন্ট</Link></li>
-                <li><a href={PLAY_STORE_URL} target="_blank" rel="noreferrer">হোস্ট করো (App)</a></li>
+                <li><Link to="/host">💰 Paid টুর্নামেন্ট হোস্ট করো</Link></li>
+                <li><a href={PLAY_STORE_URL} target="_blank" rel="noreferrer">ফ্রি টুর্নামেন্ট (App)</a></li>
                 <li><Link to="/profile">ওয়ালেট</Link></li>
               </ul>
             </div>

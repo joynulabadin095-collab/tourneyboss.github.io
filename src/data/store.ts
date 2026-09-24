@@ -1,6 +1,7 @@
-import { get, post, patch } from './api'
+import { get, post } from './api'
 import type {
   User, Tournament, EntryPayment, HostingRequest, CashoutRequest, Deposit, Role, PaymentMethod,
+  OrganizerRequest, WebsiteConfig,
 } from '../types'
 
 // --- Auth ---
@@ -120,3 +121,36 @@ export function rejectCashout(id: string) {
 }
 
 
+// --- Organizer requests (paid tournament — created on approval) ---
+export function submitOrganizerRequest(data: {
+  tournamentName: string; game: string; gameMode: string; teamCount: number; entryFee: number
+  description: string; rules: string
+  prizeDescription: string | null; championPrize: string | null; runnerUpPrize: string | null
+}) {
+  return post<{ request: OrganizerRequest }>('/organizer-requests', data).then(r => r.request)
+}
+
+export function getMyOrganizerRequests() {
+  return get<{ requests: OrganizerRequest[] }>('/organizer-requests/mine').then(r => r.requests)
+}
+
+export function getPendingOrganizerRequests() {
+  return get<{ requests: OrganizerRequest[] }>('/organizer-requests?status=pending').then(r => r.requests)
+}
+
+export function approveOrganizerRequest(id: string) {
+  return post<{ ok: true; tournamentId: string }>(`/organizer-requests/${id}/approve`)
+}
+
+export function rejectOrganizerRequest(id: string) {
+  return post<{ ok: true }>(`/organizer-requests/${id}/reject`)
+}
+
+// --- Website config (the app reads this instead of a hardcoded URL) ---
+export function getWebsiteConfig() {
+  return get<WebsiteConfig>('/config/website')
+}
+
+export function updateWebsiteConfig(baseUrl: string) {
+  return post<{ ok: true; baseUrl: string }>('/config/website', { baseUrl })
+}

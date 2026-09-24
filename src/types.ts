@@ -101,3 +101,29 @@ export interface CashoutRequest {
   status: PaymentStatus
   createdAt: string
 }
+
+// A member asks to host a PAID tournament from the website (mirrors the
+// app's own free-tournament organizer-request flow, but for paid ones).
+export interface OrganizerRequest {
+  id: string
+  userId: string
+  userName: string
+  tournamentName: string
+  game: string
+  gameMode: string
+  teamCount: number
+  entryFee: number
+  description: string
+  rules: string
+  prizeDescription: string | null
+  championPrize: string | null
+  runnerUpPrize: string | null
+  status: PaymentStatus
+  createdAt: string
+  tournamentId: string | null
+}
+
+// Single global doc the app reads at runtime instead of hardcoding a domain.
+export interface WebsiteConfig {
+  baseUrl: string
+}
