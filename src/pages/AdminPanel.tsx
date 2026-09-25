@@ -9,7 +9,20 @@ import {
 } from '../data/store'
 import type { EntryPayment, HostingRequest, CashoutRequest, Deposit, OrganizerRequest } from '../types'
 
-type Tab = 'deposits' | 'entries' | 'hosting' | 'cashouts' | 'organizer'
+type Tab = 'deposits' | 'entries' | 'organizer' | 'hosting' | 'cashouts'
+
+function initials(name: string) {
+  return name.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?'
+}
+
+function ReqActions({ onApprove, onReject }: { onApprove: () => void; onReject: () => void }) {
+  return (
+    <div className="req-actions">
+      <button className="btn btn-primary" onClick={onApprove}>✓ Approve</button>
+      <button className="btn btn-outline" style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }} onClick={onReject}>✕ Reject</button>
+    </div>
+  )
+}
 
 export default function AdminPanel() {
   const [tab, setTab] = useState<Tab>('deposits')
@@ -37,17 +50,6 @@ export default function AdminPanel() {
     getPendingOrganizerRequests().then(setOrganizerReqs)
   }
 
-  async function approveDep(id: string) { await approveDeposit(id); loadAll() }
-  async function rejectDep(id: string) { await rejectDeposit(id); loadAll() }
-  async function approveEntry(id: string) { await approveEntryPayment(id); loadAll() }
-  async function rejectEntry(id: string) { await rejectEntryPayment(id); loadAll() }
-  async function approveHosting(id: string) { await approveHostingRequest(id); loadAll() }
-  async function rejectHosting(id: string) { await rejectHostingRequest(id); loadAll() }
-  async function approveCashoutReq(id: string) { await approveCashout(id); loadAll() }
-  async function rejectCashoutReq(id: string) { await rejectCashout(id); loadAll() }
-  async function approveOrgReq(id: string) { await approveOrganizerRequest(id); loadAll() }
-  async function rejectOrgReq(id: string) { await rejectOrganizerRequest(id); loadAll() }
-
   async function saveWebsiteUrl() {
     setUrlMsg('')
     setSavingUrl(true)
@@ -62,19 +64,140 @@ export default function AdminPanel() {
     }
   }
 
-  return (
-    <div className="container" style={{ padding: 'var(--space-8) 0' }}>
-      <h1>Admin প্যানেল</h1>
+  const totalPending = deposits.length + entries.length + hosting.length + cashouts.length + organizerReqs.length
 
-      {/* Website URL — the app reads this instead of a hardcoded domain */}
-      <div className="card" style={{ marginBottom: 'var(--space-6)' }}>
-        <h3 style={{ marginTop: 0 }}>Website URL (App এর জন্য)</h3>
-        <p style={{ color: 'var(--text-dim)', fontSize: '.88rem' }}>
-          ডোমেইন বদলালে শুধু এখানে আপডেট করো — App কোনো hardcoded URL ব্যবহার করে না, এখান থেকেই পড়ে।
+  const STATS: { key: Tab; ico: string; label: string; count: number }[] = [
+    { key: 'deposits', ico: '💰', label: 'Deposits', count: deposits.length },
+    { key: 'entries', ico: '🎮', label: 'Entry Fee', count: entries.length },
+    { key: 'organizer', ico: '🏆', label: 'Host Req.', count: organizerReqs.length },
+    { key: 'hosting', ico: '📢', label: 'Hosting Fee', count: hosting.length },
+    { key: 'cashouts', ico: '💸', label: 'Withdraw', count: cashouts.length },
+  ]
+
+  return (
+    <div className="container" style={{ padding: 'var(--space-8) 0', maxWidth: 640 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-5)' }}>
+        <h1 style={{ margin: 0 }}>Admin Dashboard</h1>
+        <span className="pill-badge"><span className="dot" />{totalPending} Pending</span>
+      </div>
+
+      <div className="admin-stats">
+        {STATS.map(s => (
+          <div key={s.key} className={`admin-stat${tab === s.key ? ' active' : ''}`} onClick={() => setTab(s.key)}>
+            <div className="ico">{s.ico}</div>
+            <div className="num">{s.count}</div>
+            <div className="lbl">{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {tab === 'deposits' && (
+        <div>
+          {deposits.map(d => (
+            <div key={d.id} className="req-card">
+              <div className="req-row">
+                <div className="req-who">
+                  <div className="req-avatar">{initials(d.playerName)}</div>
+                  <div><div className="req-name">{d.playerName}</div><div className="req-sub">{d.method} Deposit</div></div>
+                </div>
+                <div className="req-amt">৳{d.amount}</div>
+              </div>
+              <div className="req-ref">Ref: {d.transactionRef}</div>
+              <ReqActions onApprove={() => approveDeposit(d.id).then(loadAll)} onReject={() => rejectDeposit(d.id).then(loadAll)} />
+            </div>
+          ))}
+          {deposits.length === 0 && <div className="req-empty">🎉 আর কিছু pending নেই</div>}
+        </div>
+      )}
+
+      {tab === 'entries' && (
+        <div>
+          {entries.map(p => (
+            <div key={p.id} className="req-card">
+              <div className="req-row">
+                <div className="req-who">
+                  <div className="req-avatar">{initials(p.playerName)}</div>
+                  <div><div className="req-name">{p.playerName}</div><div className="req-sub">{p.tournamentId}</div></div>
+                </div>
+                <div className="req-amt">৳{p.amount}</div>
+              </div>
+              <span className="badge badge-approved">{p.method}</span>
+              <div className="req-ref">Ref: {p.transactionRef}</div>
+              <ReqActions onApprove={() => approveEntryPayment(p.id).then(loadAll)} onReject={() => rejectEntryPayment(p.id).then(loadAll)} />
+            </div>
+          ))}
+          {entries.length === 0 && <div className="req-empty">🎉 আর কিছু pending নেই</div>}
+        </div>
+      )}
+
+      {tab === 'organizer' && (
+        <div>
+          {organizerReqs.map(r => (
+            <div key={r.id} className="req-card">
+              <div className="req-row">
+                <div className="req-who">
+                  <div className="req-avatar">{initials(r.userName)}</div>
+                  <div><div className="req-name">{r.userName}</div><div className="req-sub">{r.tournamentName} · {r.game} · {r.teamCount} টিম</div></div>
+                </div>
+                <div className="req-amt">৳{r.entryFee}</div>
+              </div>
+              <ReqActions onApprove={() => approveOrganizerRequest(r.id).then(loadAll)} onReject={() => rejectOrganizerRequest(r.id).then(loadAll)} />
+            </div>
+          ))}
+          {organizerReqs.length === 0 && <div className="req-empty">🎉 আর কিছু pending নেই</div>}
+          <p style={{ color: 'var(--text-dim)', fontSize: '.8rem', marginTop: 10 }}>
+            Approve করলে সাথে সাথে টুর্নামেন্ট তৈরি হয়ে যাবে এবং ইউজার Organizer হয়ে যাবে।
+          </p>
+        </div>
+      )}
+
+      {tab === 'hosting' && (
+        <div>
+          {hosting.map(r => (
+            <div key={r.id} className="req-card">
+              <div className="req-row">
+                <div className="req-who">
+                  <div className="req-avatar">{initials(r.organizerName)}</div>
+                  <div><div className="req-name">{r.organizerName}</div><div className="req-sub">{r.tournamentName}</div></div>
+                </div>
+                <div className="req-amt">৳{r.hostingFee}</div>
+              </div>
+              <span className="badge badge-approved">{r.method}</span>
+              <div className="req-ref">Ref: {r.transactionRef}</div>
+              <ReqActions onApprove={() => approveHostingRequest(r.id).then(loadAll)} onReject={() => rejectHostingRequest(r.id).then(loadAll)} />
+            </div>
+          ))}
+          {hosting.length === 0 && <div className="req-empty">🎉 আর কিছু pending নেই</div>}
+        </div>
+      )}
+
+      {tab === 'cashouts' && (
+        <div>
+          {cashouts.map(c => (
+            <div key={c.id} className="req-card">
+              <div className="req-row">
+                <div className="req-who">
+                  <div className="req-avatar">{initials(c.playerName)}</div>
+                  <div><div className="req-name">{c.playerName}</div><div className="req-sub">{c.method} · {c.accountNumber}</div></div>
+                </div>
+                <div className="req-amt">৳{c.receivableAmount}</div>
+              </div>
+              <div className="req-ref">অনুরোধ: ৳{c.amount} (ফি বাদে ৳{c.receivableAmount} পাঠাতে হবে)</div>
+              <ReqActions onApprove={() => approveCashout(c.id).then(loadAll)} onReject={() => rejectCashout(c.id).then(loadAll)} />
+            </div>
+          ))}
+          {cashouts.length === 0 && <div className="req-empty">🎉 আর কিছু pending নেই</div>}
+        </div>
+      )}
+
+      <details className="admin-settings">
+        <summary>⚙️ Website Settings</summary>
+        <p style={{ color: 'var(--text-dim)', fontSize: '.85rem', marginTop: 10 }}>
+          App এর জন্য — ডোমেইন বদলালে শুধু এখানে আপডেট করো।
         </p>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
           <input
-            style={{ flex: 1, minWidth: 220 }}
+            style={{ flex: 1, minWidth: 200 }}
             value={baseUrl}
             onChange={e => setBaseUrl(e.target.value)}
             placeholder="https://tourneybosss.netlify.app"
@@ -84,143 +207,7 @@ export default function AdminPanel() {
           </button>
         </div>
         {urlMsg && <p style={{ marginTop: 8, fontSize: '.85rem' }}>{urlMsg}</p>}
-      </div>
-
-      <div style={{ display: 'flex', gap: 'var(--space-2)', margin: 'var(--space-6) 0', flexWrap: 'wrap' }}>
-        <button className={tab === 'deposits' ? 'btn btn-primary' : 'btn btn-outline'} onClick={() => setTab('deposits')}>
-          Deposits ({deposits.length})
-        </button>
-        <button className={tab === 'entries' ? 'btn btn-primary' : 'btn btn-outline'} onClick={() => setTab('entries')}>
-          Entry Fee ({entries.length})
-        </button>
-        <button className={tab === 'organizer' ? 'btn btn-primary' : 'btn btn-outline'} onClick={() => setTab('organizer')}>
-          Host Requests ({organizerReqs.length})
-        </button>
-        <button className={tab === 'hosting' ? 'btn btn-primary' : 'btn btn-outline'} onClick={() => setTab('hosting')}>
-          Hosting Fee ({hosting.length})
-        </button>
-        <button className={tab === 'cashouts' ? 'btn btn-primary' : 'btn btn-outline'} onClick={() => setTab('cashouts')}>
-          Withdraw ({cashouts.length})
-        </button>
-      </div>
-
-      {tab === 'deposits' && (
-        <div className="card">
-          <div className="table-wrap">
-          <table className="table">
-            <thead><tr><th>Player</th><th>পরিমাণ</th><th>মাধ্যম</th><th>TrxID</th><th></th></tr></thead>
-            <tbody>
-              {deposits.map(d => (
-                <tr key={d.id}>
-                  <td>{d.playerName}</td><td>৳{d.amount}</td>
-                  <td>{d.method}</td><td>{d.transactionRef}</td>
-                  <td style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                    <button className="btn btn-primary" onClick={() => approveDep(d.id)}>Approve</button>
-                    <button className="btn btn-danger" onClick={() => rejectDep(d.id)}>Reject</button>
-                  </td>
-                </tr>
-              ))}
-              {deposits.length === 0 && <tr><td colSpan={5} style={{ color: 'var(--text-dim)' }}>Pending কিছু নেই</td></tr>}
-            </tbody>
-          </table>
-          </div>
-        </div>
-      )}
-
-      {tab === 'entries' && (
-        <div className="card">
-          <div className="table-wrap">
-          <table className="table">
-            <thead><tr><th>Player</th><th>টুর্নামেন্ট</th><th>পরিমাণ</th><th>মাধ্যম</th><th>Ref</th><th></th></tr></thead>
-            <tbody>
-              {entries.map(p => (
-                <tr key={p.id}>
-                  <td>{p.playerName}</td><td>{p.tournamentId}</td><td>৳{p.amount}</td>
-                  <td>{p.method}</td><td>{p.transactionRef}</td>
-                  <td style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                    <button className="btn btn-primary" onClick={() => approveEntry(p.id)}>Approve</button>
-                    <button className="btn btn-danger" onClick={() => rejectEntry(p.id)}>Reject</button>
-                  </td>
-                </tr>
-              ))}
-              {entries.length === 0 && <tr><td colSpan={6} style={{ color: 'var(--text-dim)' }}>Pending কিছু নেই</td></tr>}
-            </tbody>
-          </table>
-          </div>
-        </div>
-      )}
-
-      {tab === 'organizer' && (
-        <div className="card">
-          <div className="table-wrap">
-          <table className="table">
-            <thead><tr><th>User</th><th>টুর্নামেন্ট</th><th>গেম</th><th>টিম</th><th>Entry Fee</th><th></th></tr></thead>
-            <tbody>
-              {organizerReqs.map(r => (
-                <tr key={r.id}>
-                  <td>{r.userName}</td><td>{r.tournamentName}</td><td>{r.game}</td>
-                  <td>{r.teamCount}</td><td>৳{r.entryFee}</td>
-                  <td style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                    <button className="btn btn-primary" onClick={() => approveOrgReq(r.id)}>Approve</button>
-                    <button className="btn btn-danger" onClick={() => rejectOrgReq(r.id)}>Reject</button>
-                  </td>
-                </tr>
-              ))}
-              {organizerReqs.length === 0 && <tr><td colSpan={6} style={{ color: 'var(--text-dim)' }}>Pending কিছু নেই</td></tr>}
-            </tbody>
-          </table>
-          </div>
-          <p style={{ color: 'var(--text-dim)', fontSize: '.82rem', marginTop: 10 }}>
-            Approve করলে সাথে সাথে টুর্নামেন্ট তৈরি হয়ে যাবে (isPaid + entryFee সহ) এবং ইউজার Organizer হয়ে যাবে।
-          </p>
-        </div>
-      )}
-
-      {tab === 'hosting' && (
-        <div className="card">
-          <div className="table-wrap">
-          <table className="table">
-            <thead><tr><th>Organizer</th><th>টুর্নামেন্ট</th><th>ফি</th><th>মাধ্যম</th><th>Ref</th><th></th></tr></thead>
-            <tbody>
-              {hosting.map(r => (
-                <tr key={r.id}>
-                  <td>{r.organizerName}</td><td>{r.tournamentName}</td><td>৳{r.hostingFee}</td>
-                  <td>{r.method}</td><td>{r.transactionRef}</td>
-                  <td style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                    <button className="btn btn-primary" onClick={() => approveHosting(r.id)}>Approve</button>
-                    <button className="btn btn-danger" onClick={() => rejectHosting(r.id)}>Reject</button>
-                  </td>
-                </tr>
-              ))}
-              {hosting.length === 0 && <tr><td colSpan={6} style={{ color: 'var(--text-dim)' }}>Pending কিছু নেই</td></tr>}
-            </tbody>
-          </table>
-          </div>
-        </div>
-      )}
-
-      {tab === 'cashouts' && (
-        <div className="card">
-          <div className="table-wrap">
-          <table className="table">
-            <thead><tr><th>Player</th><th>পরিমাণ</th><th>পাঠাতে হবে</th><th>মাধ্যম</th><th>Account</th><th></th></tr></thead>
-            <tbody>
-              {cashouts.map(c => (
-                <tr key={c.id}>
-                  <td>{c.playerName}</td><td>৳{c.amount}</td><td><strong>৳{c.receivableAmount}</strong></td>
-                  <td>{c.method}</td><td>{c.accountNumber}</td>
-                  <td style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                    <button className="btn btn-primary" onClick={() => approveCashoutReq(c.id)}>Approve</button>
-                    <button className="btn btn-danger" onClick={() => rejectCashoutReq(c.id)}>Reject</button>
-                  </td>
-                </tr>
-              ))}
-              {cashouts.length === 0 && <tr><td colSpan={6} style={{ color: 'var(--text-dim)' }}>Pending কিছু নেই</td></tr>}
-            </tbody>
-          </table>
-          </div>
-        </div>
-      )}
+      </details>
     </div>
   )
 }

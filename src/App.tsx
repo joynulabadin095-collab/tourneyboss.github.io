@@ -16,6 +16,7 @@ const AdminPanel = lazy(() => import('./pages/AdminPanel'))
 const Profile = lazy(() => import('./pages/Profile'))
 const SponsorDashboard = lazy(() => import('./pages/SponsorDashboard'))
 const HostTournament = lazy(() => import('./pages/HostTournament'))
+const Wallet = lazy(() => import('./pages/Wallet'))
 
 function PageLoading() {
   return (
@@ -46,6 +47,9 @@ export default function App() {
           <ProtectedRoute role="admin"><AdminPanel /></ProtectedRoute>
         } />
         <Route path="/host" element={<RequireAuth><HostTournament /></RequireAuth>} />
+        <Route path="/wallet" element={
+          <ProtectedRoute role="member"><Wallet /></ProtectedRoute>
+        } />
         <Route path="/sponsor" element={
           <ProtectedRoute role="sponsor_manager"><SponsorDashboard /></ProtectedRoute>
         } />

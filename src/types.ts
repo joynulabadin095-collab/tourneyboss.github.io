@@ -88,6 +88,9 @@ export interface Tournament {
   // are created from the app and have neither field set.
   isPaid?: boolean
   entryFee?: number
+  // ISO datetime — when registration/slot-filling closes. Optional; when
+  // absent, no countdown is shown. Set by the organizer at request time.
+  registrationDeadline?: string
 }
 
 export interface CashoutRequest {
@@ -113,6 +116,7 @@ export interface OrganizerRequest {
   gameMode: string
   teamCount: number
   entryFee: number
+  registrationDeadline: string | null
   description: string
   rules: string
   prizeDescription: string | null

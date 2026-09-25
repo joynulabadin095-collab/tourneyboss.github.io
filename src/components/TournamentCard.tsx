@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
 import type { Tournament } from '../types'
+import Countdown from './Countdown'
 
-const STATUS_LABEL: Record<string, { label: string; cls: string; pulse?: boolean }> = {
+export const STATUS_LABEL: Record<string, { label: string; cls: string; pulse?: boolean }> = {
   registration: { label: 'রেজিস্ট্রেশন চলছে', cls: 'open' },
   in_progress: { label: 'লাইভ', cls: 'live', pulse: true },
   completed: { label: 'শেষ হয়েছে', cls: 'soon' },
@@ -27,6 +28,10 @@ export default function TournamentCard({ t }: { t: Tournament }) {
           {status.label}
         </span>
       </div>
+
+      {t.registrationDeadline && (
+        <div style={{ marginBottom: 10 }}><Countdown deadline={t.registrationDeadline} compact /></div>
+      )}
 
       <h3 className="t-title">{t.name}</h3>
       <div className="t-meta">

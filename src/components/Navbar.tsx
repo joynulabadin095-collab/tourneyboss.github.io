@@ -39,7 +39,7 @@ export default function Navbar() {
               <Link to={dashboardPath} style={{ color: 'var(--text-dim)' }}>ড্যাশবোর্ড</Link>
               <Link to="/profile" style={{ color: 'var(--text-dim)' }}>প্রোফাইল</Link>
               {user.role === 'member' && (
-                <span className="badge badge-approved">💎 {user.walletBalance}</span>
+                <Link to="/wallet" className="badge badge-approved" style={{ textDecoration: 'none' }}>💎 {user.walletBalance}</Link>
               )}
               <button className="btn btn-outline" onClick={handleLogout}>লগআউট</button>
             </>
@@ -89,9 +89,9 @@ export default function Navbar() {
               <Link to={dashboardPath} onClick={close}>📊 ড্যাশবোর্ড</Link>
               <Link to="/profile" onClick={close}>👤 প্রোফাইল</Link>
               {user.role === 'member' && (
-                <div style={{ padding: '10px 14px' }}>
-                  <span className="badge badge-approved">💎 {user.walletBalance}</span>
-                </div>
+                <Link to="/wallet" onClick={close} className="badge badge-approved" style={{ textDecoration: 'none', display: 'inline-block', margin: '0 14px' }}>
+                  💎 {user.walletBalance}
+                </Link>
               )}
             </>
           )}

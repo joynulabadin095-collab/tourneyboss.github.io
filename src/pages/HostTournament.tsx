@@ -20,6 +20,7 @@ export default function HostTournament() {
   const [gameMode, setGameMode] = useState('')
   const [teamCount, setTeamCount] = useState('')
   const [entryFee, setEntryFee] = useState('')
+  const [registrationDeadline, setRegistrationDeadline] = useState('')
   const [description, setDescription] = useState('')
   const [rules, setRules] = useState('')
   const [championPrize, setChampionPrize] = useState('')
@@ -45,6 +46,7 @@ export default function HostTournament() {
         gameMode,
         teamCount: Number(teamCount),
         entryFee: Number(entryFee),
+        registrationDeadline: registrationDeadline ? new Date(registrationDeadline).toISOString() : null,
         description,
         rules,
         prizeDescription: null,
@@ -53,7 +55,7 @@ export default function HostTournament() {
       })
       setDone(true)
       setTournamentName(''); setGame(''); setGameMode(''); setTeamCount('')
-      setEntryFee(''); setDescription(''); setRules(''); setChampionPrize(''); setRunnerUpPrize('')
+      setEntryFee(''); setRegistrationDeadline(''); setDescription(''); setRules(''); setChampionPrize(''); setRunnerUpPrize('')
       loadRequests()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'জমা দেওয়া যায়নি')
@@ -111,6 +113,10 @@ export default function HostTournament() {
           <div className="field">
             <label>প্রতি টিমের Entry Fee (৳) — সবার জন্য একই থাকবে</label>
             <input type="number" min={1} value={entryFee} onChange={e => setEntryFee(e.target.value)} required />
+          </div>
+          <div className="field">
+            <label>Registration Deadline (ঐচ্ছিক)</label>
+            <input type="datetime-local" value={registrationDeadline} onChange={e => setRegistrationDeadline(e.target.value)} />
           </div>
           <div className="field">
             <label>চ্যাম্পিয়ন প্রাইজ</label>

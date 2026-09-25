@@ -124,6 +124,7 @@ export function rejectCashout(id: string) {
 // --- Organizer requests (paid tournament — created on approval) ---
 export function submitOrganizerRequest(data: {
   tournamentName: string; game: string; gameMode: string; teamCount: number; entryFee: number
+  registrationDeadline: string | null
   description: string; rules: string
   prizeDescription: string | null; championPrize: string | null; runnerUpPrize: string | null
 }) {
