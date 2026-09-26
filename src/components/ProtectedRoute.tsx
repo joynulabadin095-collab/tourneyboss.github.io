@@ -13,6 +13,7 @@ export default function ProtectedRoute({ role, children }: { role: Role; childre
     )
   }
   if (!user) return <Navigate to="/login" replace />
-  if (user.role !== role) return <Navigate to="/" replace />
+  // Admins can access every role-protected page, not just /admin.
+  if (user.role !== role && user.role !== 'admin') return <Navigate to="/" replace />
   return <>{children}</>
 }

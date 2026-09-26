@@ -37,6 +37,14 @@ export default function Navbar() {
           {user ? (
             <>
               <Link to={dashboardPath} style={{ color: 'var(--text-dim)' }}>ড্যাশবোর্ড</Link>
+              {user.role === 'admin' && (
+                <>
+                  <Link to="/player" style={{ color: 'var(--text-dim)' }}>প্লেয়ার</Link>
+                  <Link to="/organizer" style={{ color: 'var(--text-dim)' }}>অর্গানাইজার</Link>
+                  <Link to="/sponsor" style={{ color: 'var(--text-dim)' }}>স্পনসর</Link>
+                  <Link to="/wallet" style={{ color: 'var(--text-dim)' }}>ওয়ালেট</Link>
+                </>
+              )}
               <Link to="/profile" style={{ color: 'var(--text-dim)' }}>প্রোফাইল</Link>
               {user.role === 'member' && (
                 <Link to="/wallet" className="badge badge-approved" style={{ textDecoration: 'none' }}>💎 {user.walletBalance}</Link>
@@ -87,6 +95,14 @@ export default function Navbar() {
             <>
               <div className="divider" />
               <Link to={dashboardPath} onClick={close}>📊 ড্যাশবোর্ড</Link>
+              {user.role === 'admin' && (
+                <>
+                  <Link to="/player" onClick={close}>🎮 প্লেয়ার ড্যাশবোর্ড</Link>
+                  <Link to="/organizer" onClick={close}>🗂️ অর্গানাইজার ড্যাশবোর্ড</Link>
+                  <Link to="/sponsor" onClick={close}>🤝 স্পনসর ড্যাশবোর্ড</Link>
+                  <Link to="/wallet" onClick={close}>💰 ওয়ালেট</Link>
+                </>
+              )}
               <Link to="/profile" onClick={close}>👤 প্রোফাইল</Link>
               {user.role === 'member' && (
                 <Link to="/wallet" onClick={close} className="badge badge-approved" style={{ textDecoration: 'none', display: 'inline-block', margin: '0 14px' }}>

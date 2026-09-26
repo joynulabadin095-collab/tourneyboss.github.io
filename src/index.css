@@ -521,3 +521,29 @@ header {
 .countdown-box-row { display: flex; gap: 10px; }
 .countdown-compact { color: var(--gold); font-size: .82rem; font-weight: 600; white-space: nowrap; }
 .countdown-ended { color: var(--text-dim); font-size: .82rem; font-weight: 600; }
+
+/* ============================================================
+   ADMIN DASHBOARD v3 — tab row + polished table + toasts
+   ============================================================ */
+.tab-row { display: flex; gap: 8px; flex-wrap: wrap; margin: var(--space-5) 0; }
+.tab-btn {
+  padding: 9px 16px; border-radius: 999px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-dim); font-weight: 600; font-size: .85rem; cursor: pointer;
+}
+.tab-btn.active { background: linear-gradient(90deg, var(--gold), #FFC94D); color: #1A1200; border-color: transparent; }
+
+.table tbody tr { transition: background .15s ease; }
+.table tbody tr:hover { background: rgba(255,255,255,0.03); }
+.mono { font-family: 'Courier New', monospace; font-size: .82rem; color: var(--text-dim); }
+.time-ago { color: var(--text-dim); font-size: .8rem; white-space: nowrap; }
+
+.toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; flex-direction: column; gap: 8px; width: min(90vw, 360px); }
+.toast {
+  background: #14141f; border: 1px solid var(--border); border-left: 3px solid var(--success);
+  border-radius: 10px; padding: 12px 14px; box-shadow: 0 10px 30px rgba(0,0,0,.4);
+  animation: toast-in .25s ease;
+}
+.toast.danger { border-left-color: var(--danger); }
+.toast .t-title { font-weight: 700; font-size: .9rem; }
+.toast .t-msg { color: var(--text-dim); font-size: .8rem; margin-top: 2px; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
